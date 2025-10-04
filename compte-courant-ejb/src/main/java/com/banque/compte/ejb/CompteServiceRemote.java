@@ -3,6 +3,7 @@ package com.banque.compte.ejb;
 import com.banque.compte.entity.Compte;
 import com.banque.compte.entity.Operation;
 import com.banque.compte.entity.Client;
+import com.banque.compte.entity.TypeCompte;
 
 import jakarta.ejb.Remote;
 import java.math.BigDecimal;
@@ -16,6 +17,9 @@ public interface CompteServiceRemote {
     Client trouverClientParId(Long idClient);
     List<Client> listerTousLesClients();
     Client modifierClient(Client client);
+    
+    // Gestion des types de comptes
+    List<TypeCompte> listerTousLesTypesCompte();
     
     
     // Gestion des comptes
@@ -32,6 +36,7 @@ public interface CompteServiceRemote {
     Operation effectuerVirement(Long idCompteDebiteur, Long idCompteCrediteur, BigDecimal montant, String description);
     List<Operation> listerOperationsParCompte(Long idCompte);
     List<Operation> listerOperationsParCompte(Long idCompte, int limite);
+    List<Operation> listerToutesLesOperations(int limite);
     
     // Utilitaires
     boolean compteExiste(String numeroCompte);

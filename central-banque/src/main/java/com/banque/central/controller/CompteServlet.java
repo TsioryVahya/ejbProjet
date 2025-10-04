@@ -6,6 +6,7 @@ import com.banque.compte.ejb.CompteServiceRemote;
 import com.banque.compte.entity.Client;
 import com.banque.compte.entity.Compte;
 import com.banque.compte.entity.Operation;
+import com.banque.compte.entity.TypeCompte;
 
 import jakarta.ejb.EJB;
 import jakarta.servlet.ServletException;
@@ -97,6 +98,20 @@ public class CompteServlet extends HttpServlet {
         List<CompteDTO> comptesDTO = new ArrayList<>();
         
         try {
+            // Récupérer les messages de session s'ils existent
+            String messageSucces = (String) request.getSession().getAttribute("succes");
+            String messageErreur = (String) request.getSession().getAttribute("erreur");
+            
+            if (messageSucces != null) {
+                request.setAttribute("succes", messageSucces);
+                request.getSession().removeAttribute("succes");
+            }
+            
+            if (messageErreur != null) {
+                request.setAttribute("erreur", messageErreur);
+                request.getSession().removeAttribute("erreur");
+            }
+            
             List<Compte> comptes = compteService.listerTousLesComptes();
             
             for (Compte compte : comptes) {
@@ -233,7 +248,10 @@ public class CompteServlet extends HttpServlet {
         
         try {
             List<Client> clients = compteService.listerTousLesClients();
+            List<TypeCompte> typesCompte = compteService.listerTousLesTypesCompte();
+            
             request.setAttribute("clients", clients);
+            request.setAttribute("typesCompte", typesCompte);
             request.getRequestDispatcher("/jsp/nouveau-compte.jsp").forward(request, response);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de l'affichage du formulaire: " + e.getMessage());
@@ -256,8 +274,9 @@ public class CompteServlet extends HttpServlet {
             
             Compte nouveauCompte = compteService.creerCompte(numeroCompte, idClient, idTypeCompte, soldeInitial);
             
-            request.setAttribute("succes", "Compte créé avec succès");
-            response.sendRedirect(request.getContextPath() + "/compte/details?id=" + nouveauCompte.getIdCompte());
+            request.getSession().setAttribute("succes", 
+                String.format("Compte %s créé avec succès pour le client", numeroCompte));
+            response.sendRedirect(request.getContextPath() + "/compte/list");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la création du compte: " + e.getMessage());
@@ -277,15 +296,21 @@ public class CompteServlet extends HttpServlet {
             Long idCompte = Long.parseLong(idCompteStr);
             BigDecimal montant = new BigDecimal(montantStr);
             
+            if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Le montant doit être positif");
+            }
+            
             Operation operation = compteService.effectuerDepot(idCompte, montant, description);
             
-            request.setAttribute("succes", "Dépôt effectué avec succès");
-            response.sendRedirect(request.getContextPath() + "/compte/details?id=" + idCompte);
+            // Utiliser la session pour passer le message de succès
+            request.getSession().setAttribute("succes", 
+                String.format("Dépôt de %.2f€ effectué avec succès sur le compte", montant));
+            response.sendRedirect(request.getContextPath() + "/compte/list");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors du dépôt: " + e.getMessage());
-            request.setAttribute("erreur", "Erreur lors du dépôt: " + e.getMessage());
-            afficherDetailsCompte(request, response);
+            request.getSession().setAttribute("erreur", "Erreur lors du dépôt: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/compte/list");
         }
     }
     
@@ -300,40 +325,75 @@ public class CompteServlet extends HttpServlet {
             Long idCompte = Long.parseLong(idCompteStr);
             BigDecimal montant = new BigDecimal(montantStr);
             
+            if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Le montant doit être positif");
+            }
+            
             Operation operation = compteService.effectuerRetrait(idCompte, montant, description);
             
-            request.setAttribute("succes", "Retrait effectué avec succès");
-            response.sendRedirect(request.getContextPath() + "/compte/details?id=" + idCompte);
+            // Utiliser la session pour passer le message de succès
+            request.getSession().setAttribute("succes", 
+                String.format("Retrait de %.2f€ effectué avec succès sur le compte", montant));
+            response.sendRedirect(request.getContextPath() + "/compte/list");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors du retrait: " + e.getMessage());
-            request.setAttribute("erreur", "Erreur lors du retrait: " + e.getMessage());
-            afficherDetailsCompte(request, response);
+            request.getSession().setAttribute("erreur", "Erreur lors du retrait: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/compte/list");
         }
     }
     
     private void effectuerVirement(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        // Support pour les deux formats de paramètres
+        String idCompteSourceStr = request.getParameter("idCompteSource");
         String idCompteDebiteurStr = request.getParameter("idCompteDebiteur");
+        String compteDestination = request.getParameter("compteDestination");
         String idCompteCrediteurStr = request.getParameter("idCompteCrediteur");
         String montantStr = request.getParameter("montant");
         String description = request.getParameter("description");
         
         try {
-            Long idCompteDebiteur = Long.parseLong(idCompteDebiteurStr);
-            Long idCompteCrediteur = Long.parseLong(idCompteCrediteurStr);
+            // Utiliser idCompteSource si disponible, sinon idCompteDebiteur
+            Long idCompteDebiteur = Long.parseLong(idCompteSourceStr != null ? idCompteSourceStr : idCompteDebiteurStr);
+            
+            Long idCompteCrediteur;
+            if (idCompteCrediteurStr != null) {
+                // Virement classique avec ID
+                idCompteCrediteur = Long.parseLong(idCompteCrediteurStr);
+            } else if (compteDestination != null) {
+                // Virement rapide avec numéro de compte
+                Compte compteDestinataire = compteService.trouverCompteParNumero(compteDestination);
+                if (compteDestinataire == null) {
+                    throw new IllegalArgumentException("Compte de destination introuvable: " + compteDestination);
+                }
+                idCompteCrediteur = compteDestinataire.getIdCompte();
+            } else {
+                throw new IllegalArgumentException("Compte de destination non spécifié");
+            }
+            
             BigDecimal montant = new BigDecimal(montantStr);
+            
+            if (montant.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Le montant doit être positif");
+            }
+            
+            if (idCompteDebiteur.equals(idCompteCrediteur)) {
+                throw new IllegalArgumentException("Le compte source et destination ne peuvent pas être identiques");
+            }
             
             Operation operation = compteService.effectuerVirement(idCompteDebiteur, idCompteCrediteur, montant, description);
             
-            request.setAttribute("succes", "Virement effectué avec succès");
-            response.sendRedirect(request.getContextPath() + "/compte/details?id=" + idCompteDebiteur);
+            // Utiliser la session pour passer le message de succès
+            request.getSession().setAttribute("succes", 
+                String.format("Virement de %.2f€ effectué avec succès", montant));
+            response.sendRedirect(request.getContextPath() + "/compte/list");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors du virement: " + e.getMessage());
-            request.setAttribute("erreur", "Erreur lors du virement: " + e.getMessage());
-            afficherDetailsCompte(request, response);
+            request.getSession().setAttribute("erreur", "Erreur lors du virement: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/compte/list");
         }
     }
 }

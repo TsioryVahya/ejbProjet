@@ -44,6 +44,14 @@ public class Operation implements Serializable {
         this.compte = compte;
     }
     
+    // Méthode appelée avant la persistance pour s'assurer que la date est définie
+    @PrePersist
+    protected void onCreate() {
+        if (this.dateOperation == null) {
+            this.dateOperation = LocalDateTime.now();
+        }
+    }
+    
     // Méthode pour obtenir le montant avec signe (+ pour crédit, - pour débit)
     public BigDecimal getMontantAvecSigne() {
         if (typeOperation != null && typeOperation.isCredit()) {

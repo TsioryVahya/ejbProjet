@@ -27,8 +27,14 @@
                     <a href="${pageContext.request.contextPath}/accueil" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium bg-blue-700">
                         <i class="fas fa-home mr-2"></i>Accueil
                     </a>
+                    <a href="${pageContext.request.contextPath}/client/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-users mr-2"></i>Clients
+                    </a>
                     <a href="${pageContext.request.contextPath}/compte/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-credit-card mr-2"></i>Comptes
+                    </a>
+                    <a href="${pageContext.request.contextPath}/operations/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list-alt mr-2"></i>Opérations
                     </a>
                     <a href="${pageContext.request.contextPath}/epargne/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-piggy-bank mr-2"></i>Épargne
@@ -141,7 +147,32 @@
             </c:if>
 
             <!-- Actions rapides -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Gestion des Clients -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users text-3xl text-green-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Gestion des Clients</dt>
+                                    <dd class="text-lg font-medium text-gray-900">Clients & Prospects</dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <div class="rounded-md shadow">
+                                <a href="${pageContext.request.contextPath}/client/list" 
+                                   class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                    Gérer les Clients
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Gestion des Comptes -->
                 <div class="bg-white overflow-hidden shadow rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
@@ -161,6 +192,31 @@
                                 <a href="${pageContext.request.contextPath}/compte/list" 
                                    class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                                     Voir les Comptes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historique des Opérations -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-list-alt text-3xl text-indigo-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Historique des Opérations</dt>
+                                    <dd class="text-lg font-medium text-gray-900">Transactions & Mouvements</dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <div class="rounded-md shadow">
+                                <a href="${pageContext.request.contextPath}/operations/list" 
+                                   class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                    Voir les Opérations
                                 </a>
                             </div>
                         </div>

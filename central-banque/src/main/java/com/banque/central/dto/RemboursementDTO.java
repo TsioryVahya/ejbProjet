@@ -1,9 +1,11 @@
 package com.banque.central.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RemboursementDTO implements Serializable {
     private Long idRemboursement;
     private BigDecimal montantRembourser;

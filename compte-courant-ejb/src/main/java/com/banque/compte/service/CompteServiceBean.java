@@ -10,7 +10,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Stateless
@@ -43,6 +42,14 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     @Override
     public Client modifierClient(Client client) {
         return em.merge(client);
+    }
+    
+    // ===== GESTION DES TYPES DE COMPTES =====
+    
+    @Override
+    public List<TypeCompte> listerTousLesTypesCompte() {
+        TypedQuery<TypeCompte> query = em.createQuery("SELECT t FROM TypeCompte t ORDER BY t.nomTypeCompte", TypeCompte.class);
+        return query.getResultList();
     }
     
     // ===== GESTION DES COMPTES =====
@@ -109,10 +116,10 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     
     @Override
     public BigDecimal obtenirSoldeCompte(Long idCompte) {
-        // Calcul du solde par somme des opérations
-        String sql = "SELECT COALESCE(SUM(o.montant), 0) FROM Operations o WHERE o.idCompte = :idCompte";
+        // Utilisation de la fonction PostgreSQL calculer_solde pour calculer le solde
+        String sql = "SELECT public.calculer_solde(:idCompte)";
         Object result = em.createNativeQuery(sql)
-                         .setParameter("idCompte", idCompte)
+                         .setParameter("idCompte", idCompte.intValue())
                          .getSingleResult();
         return result != null ? new BigDecimal(result.toString()) : BigDecimal.ZERO;
     }
@@ -201,7 +208,10 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     @Override
     public List<Operation> listerOperationsParCompte(Long idCompte) {
         TypedQuery<Operation> query = em.createQuery(
-            "SELECT o FROM Operation o WHERE o.compte.idCompte = :idCompte ORDER BY o.dateOperation DESC", 
+            "SELECT o FROM Operation o " +
+            "LEFT JOIN FETCH o.compte " +
+            "LEFT JOIN FETCH o.typeOperation " +
+            "WHERE o.compte.idCompte = :idCompte ORDER BY o.dateOperation DESC", 
             Operation.class);
         query.setParameter("idCompte", idCompte);
         return query.getResultList();
@@ -210,9 +220,24 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     @Override
     public List<Operation> listerOperationsParCompte(Long idCompte, int limite) {
         TypedQuery<Operation> query = em.createQuery(
-            "SELECT o FROM Operation o WHERE o.compte.idCompte = :idCompte ORDER BY o.dateOperation DESC", 
+            "SELECT o FROM Operation o " +
+            "LEFT JOIN FETCH o.compte " +
+            "LEFT JOIN FETCH o.typeOperation " +
+            "WHERE o.compte.idCompte = :idCompte ORDER BY o.dateOperation DESC", 
             Operation.class);
         query.setParameter("idCompte", idCompte);
+        query.setMaxResults(limite);
+        return query.getResultList();
+    }
+    
+    @Override
+    public List<Operation> listerToutesLesOperations(int limite) {
+        TypedQuery<Operation> query = em.createQuery(
+            "SELECT o FROM Operation o " +
+            "LEFT JOIN FETCH o.compte " +
+            "LEFT JOIN FETCH o.typeOperation " +
+            "ORDER BY o.dateOperation DESC", 
+            Operation.class);
         query.setMaxResults(limite);
         return query.getResultList();
     }

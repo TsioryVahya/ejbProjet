@@ -1,19 +1,31 @@
 package com.banque.central.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"tauxPret", "compte", "remboursements"})
 public class PretDTO implements Serializable {
     private Long idPret;
     private Integer duree;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime datePret;
     private BigDecimal montantInitial;
     private BigDecimal montantRestant;
     private String statut;
+    @JsonIgnore
     private BigDecimal tauxPret;
+    private BigDecimal tauxPourcentage; // Nouveau champ pour le taux depuis l'API
+    private Long idTaux;
     private Long idCompte;
     private String numeroCompte;
+    private String nomClient;
+    private String prenomClient;
     private BigDecimal mensualite;
     private BigDecimal montantTotal;
     private BigDecimal interetsTotal;
@@ -58,11 +70,23 @@ public class PretDTO implements Serializable {
     public BigDecimal getTauxPret() { return tauxPret; }
     public void setTauxPret(BigDecimal tauxPret) { this.tauxPret = tauxPret; }
     
+    public Long getIdTaux() { return idTaux; }
+    public void setIdTaux(Long idTaux) { this.idTaux = idTaux; }
+    
     public Long getIdCompte() { return idCompte; }
     public void setIdCompte(Long idCompte) { this.idCompte = idCompte; }
     
     public String getNumeroCompte() { return numeroCompte; }
     public void setNumeroCompte(String numeroCompte) { this.numeroCompte = numeroCompte; }
+    
+    public BigDecimal getTauxPourcentage() { return tauxPourcentage; }
+    public void setTauxPourcentage(BigDecimal tauxPourcentage) { this.tauxPourcentage = tauxPourcentage; }
+    
+    public String getNomClient() { return nomClient; }
+    public void setNomClient(String nomClient) { this.nomClient = nomClient; }
+    
+    public String getPrenomClient() { return prenomClient; }
+    public void setPrenomClient(String prenomClient) { this.prenomClient = prenomClient; }
     
     public BigDecimal getMensualite() { return mensualite; }
     public void setMensualite(BigDecimal mensualite) { this.mensualite = mensualite; }
@@ -94,6 +118,14 @@ public class PretDTO implements Serializable {
         }
         BigDecimal montantRembourse = montantInitial.subtract(montantRestant != null ? montantRestant : BigDecimal.ZERO);
         return montantRembourse.divide(montantInitial, 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
+    }
+    
+    // Méthode utilitaire pour convertir LocalDateTime en Date pour les JSP
+    public Date getDatePretAsDate() {
+        if (datePret == null) {
+            return null;
+        }
+        return Date.from(datePret.atZone(ZoneId.systemDefault()).toInstant());
     }
     
     @Override

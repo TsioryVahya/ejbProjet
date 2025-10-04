@@ -3,7 +3,7 @@ package com.banque.central.config;
 public class ApiConfig {
     
     // URLs des APIs C#
-    public static final String EPARGNE_API_BASE_URL = "http://localhost:5001/api/Epargne";
+    public static final String EPARGNE_API_BASE_URL = "https://localhost:5001/api/Epargne";
     public static final String PRET_API_BASE_URL = "http://localhost:5002/api/Pret";
     
     // Timeouts

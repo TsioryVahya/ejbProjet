@@ -27,8 +27,14 @@
                     <a href="${pageContext.request.contextPath}/accueil" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-home mr-2"></i>Accueil
                     </a>
+                    <a href="${pageContext.request.contextPath}/client/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-users mr-2"></i>Clients
+                    </a>
                     <a href="${pageContext.request.contextPath}/compte/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-credit-card mr-2"></i>Comptes
+                    </a>
+                    <a href="${pageContext.request.contextPath}/operations/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list-alt mr-2"></i>Opérations
                     </a>
                     <a href="${pageContext.request.contextPath}/epargne/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fas fa-piggy-bank mr-2"></i>Épargne
@@ -87,15 +93,49 @@
                 </div>
             </c:if>
 
-            <!-- Liste des prêts -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <!-- Tableau des prêts -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>Prêts Actifs
-                    </h3>
-                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                        ${not empty prets ? prets.size() : 0} prêt(s) trouvé(s)
-                    </p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                <i class="fas fa-hand-holding-usd mr-2"></i>Prêts Actifs
+                            </h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <span id="resultat-count">${not empty prets ? prets.size() : 0}</span> prêt(s) trouvé(s)
+                            </p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="exportToCSV()" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="fas fa-download mr-2"></i>Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barre de recherche et filtres -->
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex-1 min-w-64">
+                            <input type="text" id="search-input" placeholder="Rechercher par numéro de prêt, compte..." 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="statut-filter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Tous les statuts</option>
+                                <option value="ACTIF">Actif</option>
+                                <option value="REMBOURSE">Remboursé</option>
+                                <option value="SUSPENDU">Suspendu</option>
+                            </select>
+                            <select id="duree-filter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Toutes les durées</option>
+                                <option value="12">12 mois</option>
+                                <option value="24">24 mois</option>
+                                <option value="36">36 mois</option>
+                                <option value="60">60 mois</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <c:choose>
@@ -128,96 +168,146 @@
                         </div>
                     </c:when>
                     <c:otherwise>
-                        <ul class="divide-y divide-gray-200">
-                            <c:forEach var="pret" items="${prets}">
-                                <li class="px-4 py-4 hover:bg-gray-50">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0">
-                                                <div class="h-12 w-12 rounded-full ${pret.actif ? 'bg-purple-100' : 'bg-green-100'} flex items-center justify-center">
-                                                    <i class="fas ${pret.actif ? 'fa-hand-holding-usd text-purple-600' : 'fa-check-circle text-green-600'} text-lg"></i>
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200" id="prets-table">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
+                                            N° Prêt <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
+                                            Compte <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(2)">
+                                            Montant Initial <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(3)">
+                                            Restant Dû <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(4)">
+                                            Taux <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(5)">
+                                            Durée <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(6)">
+                                            Statut <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(7)">
+                                            Date Création <i class="fas fa-sort ml-1"></i>
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Remboursement
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="prets-tbody">
+                                    <c:forEach var="pret" items="${prets}">
+                                        <tr class="hover:bg-gray-50 transition-colors duration-200" data-statut="${pret.statut}" data-duree="${pret.duree}">
+                                            <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
-                                                    <p class="text-lg font-medium text-gray-900">Prêt #${pret.idPret}</p>
-                                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                        ${pret.statut == 'ACTIF' ? 'bg-purple-100 text-purple-800' : 
-                                                          pret.statut == 'REMBOURSE' ? 'bg-green-100 text-green-800' : 
-                                                          'bg-red-100 text-red-800'}">
-                                                        ${pret.statut}
-                                                    </span>
+                                                    <div class="flex-shrink-0 h-8 w-8">
+                                                        <div class="h-8 w-8 rounded-full ${pret.actif ? 'bg-purple-100' : 'bg-green-100'} flex items-center justify-center">
+                                                            <i class="fas ${pret.actif ? 'fa-hand-holding-usd text-purple-600' : 'fa-check-circle text-green-600'} text-sm"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-3">
+                                                        <div class="text-sm font-medium text-gray-900">#${pret.idPret}</div>
+                                                    </div>
                                                 </div>
-                                                <div class="text-sm text-gray-500">
-                                                    <i class="fas fa-credit-card mr-1"></i>
-                                                    Compte: ${pret.numeroCompte}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">
+                                                    <c:choose>
+                                                        <c:when test="${not empty pret.numeroCompte}">
+                                                            ${pret.numeroCompte}
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            Compte #${pret.idCompte}
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </div>
-                                                <div class="text-sm text-gray-500">
-                                                    <i class="fas fa-calendar mr-1"></i>
-                                                    Durée: ${pret.duree} mois
-                                                    <span class="ml-4">
-                                                        <i class="fas fa-percentage mr-1"></i>
-                                                        Taux: <fmt:formatNumber value="${pret.tauxPret}" pattern="#0.00"/>%
-                                                    </span>
-                                                </div>
-                                                <div class="text-xs text-gray-400 mt-1">
-                                                    <i class="fas fa-clock mr-1"></i>
-                                                    Accordé le <fmt:formatDate value="${pret.datePret}" pattern="dd/MM/yyyy"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-6">
-                                            <div class="text-right">
-                                                <p class="text-lg font-semibold text-purple-600">
-                                                    <fmt:formatNumber value="${pret.montantInitial}" type="currency" currencySymbol="€"/>
-                                                </p>
-                                                <p class="text-xs text-gray-500">Montant initial</p>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-lg font-semibold ${pret.montantRestant > 0 ? 'text-red-600' : 'text-green-600'}">
-                                                    <fmt:formatNumber value="${pret.montantRestant}" type="currency" currencySymbol="€"/>
-                                                </p>
-                                                <p class="text-xs text-gray-500">Restant dû</p>
-                                            </div>
-                                            <div class="flex space-x-2">
-                                                <a href="${pageContext.request.contextPath}/pret/details?id=${pret.idPret}" 
-                                                   class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                                   title="Voir les détails">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <c:if test="${pret.actif and apiDisponible}">
-                                                    <a href="${pageContext.request.contextPath}/pret/remboursement?idPret=${pret.idPret}" 
-                                                       class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                                       title="Effectuer un remboursement">
-                                                        <i class="fas fa-money-bill-wave"></i>
-                                                    </a>
-                                                    <a href="${pageContext.request.contextPath}/pret/echeancier?id=${pret.idPret}" 
-                                                       class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                                       title="Voir l'échéancier">
-                                                        <i class="fas fa-calendar-alt"></i>
-                                                    </a>
+                                                <c:if test="${not empty pret.nomClient and not empty pret.prenomClient}">
+                                                    <div class="text-xs text-gray-500">${pret.prenomClient} ${pret.nomClient}</div>
                                                 </c:if>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Barre de progression -->
-                                    <c:if test="${pret.montantInitial > 0}">
-                                        <div class="mt-3 ml-16">
-                                            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-                                                <span>Progression du remboursement</span>
-                                                <span>
-                                                    <fmt:formatNumber value="${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}" pattern="#0"/>%
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-semibold text-purple-600" data-montant="${pret.montantInitial}">
+                                                    <fmt:formatNumber value="${pret.montantInitial}" type="currency" currencySymbol="€"/>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-semibold ${pret.montantRestant > 0 ? 'text-red-600' : 'text-green-600'}" data-montant="${pret.montantRestant}">
+                                                    <fmt:formatNumber value="${pret.montantRestant}" type="currency" currencySymbol="€"/>
+                                                </div>
+                                                <!-- Barre de progression -->
+                                                <c:if test="${pret.montantInitial > 0}">
+                                                    <div class="mt-1">
+                                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                                            <div class="bg-purple-600 h-1.5 rounded-full transition-all duration-1000" 
+                                                                 style="width: ${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}%"></div>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 mt-1">
+                                                            <fmt:formatNumber value="${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}" pattern="#0"/>% remboursé
+                                                        </div>
+                                                    </div>
+                                                </c:if>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900" data-taux="${pret.tauxPourcentage}">
+                                                    <c:choose>
+                                                        <c:when test="${not empty pret.tauxPourcentage}">
+                                                            <fmt:formatNumber value="${pret.tauxPourcentage}" pattern="#0.00"/>%
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            N/A
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${pret.duree} mois</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                    ${pret.statut == 'ACTIF' ? 'bg-purple-100 text-purple-800' : 
+                                                      pret.statut == 'REMBOURSE' ? 'bg-green-100 text-green-800' : 
+                                                      'bg-red-100 text-red-800'}">
+                                                    ${pret.statut}
                                                 </span>
-                                            </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                                <div class="bg-purple-600 h-2 rounded-full" 
-                                                     style="width: ${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}%"></div>
-                                            </div>
-                                        </div>
-                                    </c:if>
-                                </li>
-                            </c:forEach>
-                        </ul>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900" data-date="<fmt:formatDate value="${pret.datePretAsDate}" pattern="yyyy-MM-dd"/>">
+                                                    <fmt:formatDate value="${pret.datePretAsDate}" pattern="dd/MM/yyyy"/>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                <c:choose>
+                                                    <c:when test="${pret.actif and apiDisponible}">
+                                                        <a href="${pageContext.request.contextPath}/pret/remboursement?idPret=${pret.idPret}" 
+                                                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200">
+                                                            <i class="fas fa-money-bill-wave mr-2"></i>Rembourser
+                                                        </a>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400">
+                                                            <c:choose>
+                                                                <c:when test="${not pret.actif}">
+                                                                    <i class="fas fa-check-circle mr-2"></i>Remboursé
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <i class="fas fa-exclamation-triangle mr-2"></i>Indisponible
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
                     </c:otherwise>
                 </c:choose>
             </div>
@@ -293,6 +383,9 @@
 
     <!-- Scripts -->
     <script>
+        let sortDirection = {};
+        let allRows = [];
+        
         // Fonction pour formater les montants
         function formatCurrency(amount) {
             return new Intl.NumberFormat('fr-FR', { 
@@ -301,8 +394,163 @@
             }).format(amount);
         }
         
-        // Animation des barres de progression
+        
+        // Fonction de tri du tableau
+        function sortTable(columnIndex) {
+            const table = document.getElementById('prets-table');
+            const tbody = document.getElementById('prets-tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Déterminer la direction du tri
+            const currentDirection = sortDirection[columnIndex] || 'asc';
+            const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+            sortDirection[columnIndex] = newDirection;
+            
+            // Mettre à jour les icônes de tri
+            document.querySelectorAll('th i.fas').forEach(icon => {
+                icon.className = 'fas fa-sort ml-1';
+            });
+            const currentIcon = document.querySelector('th:nth-child(' + (columnIndex + 1) + ') i');
+            currentIcon.className = 'fas fa-sort-' + (newDirection === 'asc' ? 'up' : 'down') + ' ml-1';
+            
+            // Trier les lignes
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(columnIndex) {
+                    case 0: // N° Prêt
+                        aValue = parseInt(a.cells[0].textContent.replace('#', ''));
+                        bValue = parseInt(b.cells[0].textContent.replace('#', ''));
+                        break;
+                    case 1: // Compte
+                        aValue = a.cells[1].textContent.trim();
+                        bValue = b.cells[1].textContent.trim();
+                        break;
+                    case 2: // Montant Initial
+                    case 3: // Restant Dû
+                        aValue = parseFloat(a.cells[columnIndex].querySelector('[data-montant]').getAttribute('data-montant'));
+                        bValue = parseFloat(b.cells[columnIndex].querySelector('[data-montant]').getAttribute('data-montant'));
+                        break;
+                    case 4: // Taux
+                        aValue = parseFloat(a.cells[4].querySelector('[data-taux]').getAttribute('data-taux')) || 0;
+                        bValue = parseFloat(b.cells[4].querySelector('[data-taux]').getAttribute('data-taux')) || 0;
+                        break;
+                    case 5: // Durée
+                        aValue = parseInt(a.cells[5].textContent.replace(' mois', ''));
+                        bValue = parseInt(b.cells[5].textContent.replace(' mois', ''));
+                        break;
+                    case 6: // Statut
+                        aValue = a.cells[6].textContent.trim();
+                        bValue = b.cells[6].textContent.trim();
+                        break;
+                    case 7: // Date
+                        aValue = new Date(a.cells[7].querySelector('[data-date]').getAttribute('data-date'));
+                        bValue = new Date(b.cells[7].querySelector('[data-date]').getAttribute('data-date'));
+                        break;
+                    default:
+                        aValue = a.cells[columnIndex].textContent.trim();
+                        bValue = b.cells[columnIndex].textContent.trim();
+                }
+                
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                    bValue = bValue.toLowerCase();
+                }
+                
+                if (newDirection === 'asc') {
+                    return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                } else {
+                    return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                }
+            });
+            
+            // Réinsérer les lignes triées
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Fonction de recherche et filtrage
+        function filterTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statutFilter = document.getElementById('statut-filter').value;
+            const dureeFilter = document.getElementById('duree-filter').value;
+            
+            const rows = document.querySelectorAll('#prets-tbody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const pretId = row.cells[0].textContent.toLowerCase();
+                const compte = row.cells[1].textContent.toLowerCase();
+                const statut = row.getAttribute('data-statut');
+                const duree = row.getAttribute('data-duree');
+                
+                // Vérifier les critères de recherche
+                const matchesSearch = pretId.includes(searchTerm) || compte.includes(searchTerm);
+                const matchesStatut = !statutFilter || statut === statutFilter;
+                const matchesDuree = !dureeFilter || duree === dureeFilter;
+                
+                if (matchesSearch && matchesStatut && matchesDuree) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Mettre à jour le compteur
+            document.getElementById('resultat-count').textContent = visibleCount;
+        }
+        
+        // Fonction d'export CSV
+        function exportToCSV() {
+            const table = document.getElementById('prets-table');
+            const rows = table.querySelectorAll('tr');
+            const csvContent = [];
+            
+            // En-têtes
+            const headers = [];
+            rows[0].querySelectorAll('th').forEach((th, index) => {
+                if (index < 8) { // Exclure la colonne Remboursement
+                    headers.push('"' + th.textContent.replace(/\s+/g, ' ').trim().replace('"', '""') + '"');
+                }
+            });
+            csvContent.push(headers.join(','));
+            
+            // Données (seulement les lignes visibles)
+            const visibleRows = Array.from(document.querySelectorAll('#prets-tbody tr')).filter(row => row.style.display !== 'none');
+            visibleRows.forEach(row => {
+                const rowData = [];
+                for (let i = 0; i < 8; i++) { // Exclure la colonne Remboursement
+                    let cellText = row.cells[i].textContent.replace(/\s+/g, ' ').trim();
+                    // Nettoyer le texte pour le CSV
+                    cellText = cellText.replace(/"/g, '""');
+                    rowData.push('"' + cellText + '"');
+                }
+                csvContent.push(rowData.join(','));
+            });
+            
+            // Télécharger le fichier
+            const blob = new Blob([csvContent.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'prets_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Initialisation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
+            // Sauvegarder toutes les lignes pour le filtrage
+            allRows = Array.from(document.querySelectorAll('#prets-tbody tr'));
+            
+            // Ajouter les écouteurs d'événements pour la recherche et les filtres
+            document.getElementById('search-input').addEventListener('input', filterTable);
+            document.getElementById('statut-filter').addEventListener('change', filterTable);
+            document.getElementById('duree-filter').addEventListener('change', filterTable);
+            
+            // Animation des barres de progression
             const progressBars = document.querySelectorAll('.bg-purple-600');
             progressBars.forEach(bar => {
                 const width = bar.style.width;

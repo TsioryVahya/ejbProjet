@@ -3,6 +3,8 @@ package com.banque.central.dto;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class OperationDTO implements Serializable {
     private Long idOperation;
@@ -75,6 +77,15 @@ public class OperationDTO implements Serializable {
             return montant.negate();
         }
         return BigDecimal.ZERO;
+    }
+    
+    // Méthodes utilitaires pour la conversion de dates (compatibilité JSP)
+    public Date getDateOperationAsDate() {
+        return dateOperation != null ? Date.from(dateOperation.atZone(ZoneId.systemDefault()).toInstant()) : null;
+    }
+    
+    public String getDateOperationFormatted() {
+        return dateOperation != null ? dateOperation.toString() : "";
     }
     
     @Override
