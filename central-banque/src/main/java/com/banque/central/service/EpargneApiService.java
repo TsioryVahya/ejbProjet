@@ -13,7 +13,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -26,9 +30,33 @@ public class EpargneApiService {
     private final ObjectMapper objectMapper;
     
     public EpargneApiService() {
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
-                .build();
+        HttpClient client;
+        try {
+            // Créer un TrustManager qui accepte tous les certificats (pour le développement)
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }
+            };
+            
+            // Configurer le contexte SSL
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            
+            client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
+                    .sslContext(sslContext)
+                    .build();
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la configuration SSL, utilisation du client par défaut: " + e.getMessage());
+            client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
+                    .build();
+        }
+        
+        this.httpClient = client;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -111,7 +139,6 @@ public class EpargneApiService {
     }
     
     // ===== GESTION DES RETRAITS D'ÉPARGNE =====
-    
     public RetraitEpargneDTO creerRetraitEpargne(Long idDepot, BigDecimal montant) throws Exception {
         try {
             String requestBody = String.format("{\"idDepot\":%d,\"montant\":%s}", idDepot, montant.toString());

@@ -13,7 +13,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -26,9 +30,33 @@ public class PretApiService {
     private final ObjectMapper objectMapper;
     
     public PretApiService() {
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
-                .build();
+        HttpClient client;
+        try {
+            // Créer un TrustManager qui accepte tous les certificats (pour le développement)
+            TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() { return null; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }
+            };
+            
+            // Configurer le contexte SSL
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            
+            client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
+                    .sslContext(sslContext)
+                    .build();
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la configuration SSL, utilisation du client par défaut: " + e.getMessage());
+            client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofMillis(ApiConfig.CONNECTION_TIMEOUT))
+                    .build();
+        }
+        
+        this.httpClient = client;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -36,9 +64,19 @@ public class PretApiService {
     // ===== GESTION DES PRÊTS =====
     
     public PretDTO creerPret(Long idCompte, BigDecimal montant, Integer dureeEnMois) throws Exception {
+        return creerPret(idCompte, montant, dureeEnMois, null);
+    }
+    
+    public PretDTO creerPret(Long idCompte, BigDecimal montant, Integer dureeEnMois, Long idTaux) throws Exception {
         try {
-            String requestBody = String.format("{\"idCompte\":%d,\"montant\":%s,\"dureeEnMois\":%d}", 
-                                             idCompte, montant.toString(), dureeEnMois);
+            String requestBody;
+            if (idTaux != null) {
+                requestBody = String.format("{\"idCompte\":%d,\"montant\":%s,\"dureeEnMois\":%d,\"idTaux\":%d}", 
+                                          idCompte, montant.toString(), dureeEnMois, idTaux);
+            } else {
+                requestBody = String.format("{\"idCompte\":%d,\"montant\":%s,\"dureeEnMois\":%d}", 
+                                          idCompte, montant.toString(), dureeEnMois);
+            }
             
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ApiConfig.PRET_API_BASE_URL + "/prets"))
@@ -261,6 +299,54 @@ public class PretApiService {
             } else {
                 LOGGER.warning("Erreur lors de la récupération des statistiques prêts: " + response.statusCode());
                 throw new Exception("Erreur lors de la récupération des statistiques prêts");
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Erreur de communication avec l'API prêt: " + e.getMessage());
+            throw new Exception(ApiConfig.ERROR_NETWORK, e);
+        }
+    }
+    
+    // ===== GESTION DES TAUX =====
+    
+    public String obtenirTousLesTaux() throws Exception {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ApiConfig.PRET_API_BASE_URL + "/taux"))
+                    .header("Accept", ApiConfig.ACCEPT_JSON)
+                    .timeout(Duration.ofMillis(ApiConfig.READ_TIMEOUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return response.body();
+            } else {
+                LOGGER.warning("Erreur lors de la récupération des taux: " + response.statusCode());
+                throw new Exception("Erreur lors de la récupération des taux");
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Erreur de communication avec l'API prêt: " + e.getMessage());
+            throw new Exception(ApiConfig.ERROR_NETWORK, e);
+        }
+    }
+    
+    public String obtenirTauxActuel() throws Exception {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ApiConfig.PRET_API_BASE_URL + "/taux/actuel"))
+                    .header("Accept", ApiConfig.ACCEPT_JSON)
+                    .timeout(Duration.ofMillis(ApiConfig.READ_TIMEOUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return response.body();
+            } else {
+                LOGGER.warning("Erreur lors de la récupération du taux actuel: " + response.statusCode());
+                throw new Exception("Erreur lors de la récupération du taux actuel");
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.severe("Erreur de communication avec l'API prêt: " + e.getMessage());

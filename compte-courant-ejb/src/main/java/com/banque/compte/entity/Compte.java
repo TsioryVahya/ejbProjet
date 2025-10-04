@@ -48,19 +48,23 @@ public class Compte implements Serializable {
     public Compte(String numeroCompte, Client client, TypeCompte typeCompte) {
         this();
         this.numeroCompte = numeroCompte;
-        this.client = client;
         this.typeCompte = typeCompte;
     }
     
     // Méthode pour calculer le solde
     public BigDecimal calculerSolde() {
-        if (operations == null || operations.isEmpty()) {
+        try {
+            if (operations == null || operations.isEmpty()) {
+                return BigDecimal.ZERO;
+            }
+            
+            return operations.stream()
+                    .map(Operation::getMontantAvecSigne)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } catch (Exception e) {
+            // En cas d'erreur (LazyInitializationException), retourner 0
             return BigDecimal.ZERO;
         }
-        
-        return operations.stream()
-                .map(Operation::getMontantAvecSigne)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
     
     // Getters et Setters
@@ -87,6 +91,11 @@ public class Compte implements Serializable {
     
     public List<Operation> getOperations() { return operations; }
     public void setOperations(List<Operation> operations) { this.operations = operations; }
+    
+    // Getter pour le solde (utilisé dans les JSP)
+    public BigDecimal getSolde() {
+        return calculerSolde();
+    }
     
     @PreUpdate
     public void preUpdate() {

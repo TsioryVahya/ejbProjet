@@ -59,14 +59,22 @@ public class PretServlet extends HttpServlet {
                 case "statistiques":
                     afficherStatistiques(request, response);
                     break;
+                case "api":
+                    String apiAction = request.getParameter("action");
+                    if ("taux".equals(apiAction)) {
+                        obtenirTauxJson(request, response);
+                    }
+                    break;
                 default:
                     listerPrets(request, response);
                     break;
             }
         } catch (Exception e) {
             LOGGER.severe("Erreur dans PretServlet: " + e.getMessage());
-            request.setAttribute("erreur", "Erreur lors du traitement de la demande: " + e.getMessage());
-            request.getRequestDispatcher("/jsp/erreur.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("erreur", "Erreur lors du traitement de la requête: " + e.getMessage());
+                request.getRequestDispatcher("/jsp/erreur.jsp").forward(request, response);
+            }
         }
     }
     
@@ -94,8 +102,10 @@ public class PretServlet extends HttpServlet {
             }
         } catch (Exception e) {
             LOGGER.severe("Erreur dans PretServlet POST: " + e.getMessage());
-            request.setAttribute("erreur", "Erreur lors du traitement de la demande: " + e.getMessage());
-            request.getRequestDispatcher("/jsp/erreur.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("erreur", "Erreur lors du traitement de la demande: " + e.getMessage());
+                request.getRequestDispatcher("/jsp/erreur.jsp").forward(request, response);
+            }
         }
     }
     
@@ -112,9 +122,11 @@ public class PretServlet extends HttpServlet {
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des prêts: " + e.getMessage());
-            request.setAttribute("erreur", "Service de prêt temporairement indisponible");
-            request.setAttribute("apiDisponible", false);
-            request.getRequestDispatcher("/jsp/pret.jsp").forward(request, response);
+            if (!response.isCommitted()) {
+                request.setAttribute("erreur", "Service de prêt temporairement indisponible");
+                request.setAttribute("apiDisponible", false);
+                request.getRequestDispatcher("/jsp/pret.jsp").forward(request, response);
+            }
         }
     }
     
@@ -166,6 +178,17 @@ public class PretServlet extends HttpServlet {
         try {
             // Récupérer tous les comptes pour le formulaire
             List<Compte> comptes = compteService.listerTousLesComptes();
+            
+            // Récupérer les taux de prêt disponibles depuis l'API
+            String tauxJson = null;
+            try {
+                tauxJson = pretApiService.obtenirTousLesTaux();
+                request.setAttribute("tauxDisponibles", tauxJson);
+                request.setAttribute("apiTauxDisponible", true);
+            } catch (Exception e) {
+                LOGGER.warning("Impossible de récupérer les taux depuis l'API: " + e.getMessage());
+                request.setAttribute("apiTauxDisponible", false);
+            }
             
             request.setAttribute("comptes", comptes);
             request.getRequestDispatcher("/jsp/nouveau-pret.jsp").forward(request, response);
@@ -270,11 +293,13 @@ public class PretServlet extends HttpServlet {
         String idCompteStr = request.getParameter("idCompte");
         String montantStr = request.getParameter("montant");
         String dureeStr = request.getParameter("duree");
+        String idTauxStr = request.getParameter("idTaux");
         
         try {
             Long idCompte = Long.parseLong(idCompteStr);
             BigDecimal montant = new BigDecimal(montantStr);
             Integer duree = Integer.parseInt(dureeStr);
+            Long idTaux = idTauxStr != null && !idTauxStr.trim().isEmpty() ? Long.parseLong(idTauxStr) : null;
             
             // Vérifier que le compte existe
             Compte compte = compteService.trouverCompteParId(idCompte);
@@ -284,16 +309,33 @@ public class PretServlet extends HttpServlet {
                 return;
             }
             
-            // Créer le prêt via l'API
-            PretDTO pret = pretApiService.creerPret(idCompte, montant, duree);
+            // Créer le prêt via l'API avec le taux sélectionné
+            pretApiService.creerPret(idCompte, montant, duree, idTaux);
             
             request.setAttribute("succes", "Prêt créé avec succès");
-            response.sendRedirect(request.getContextPath() + "/pret/details?id=" + pret.getIdPret());
+            response.sendRedirect(request.getContextPath() + "/pret/list");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la création du prêt: " + e.getMessage());
             request.setAttribute("erreur", "Erreur lors de la création du prêt: " + e.getMessage());
             afficherFormulaireNouveauPret(request, response);
+        }
+    }
+    
+    private void obtenirTauxJson(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        try {
+            LOGGER.info("Récupération des taux depuis l'API C#...");
+            String tauxJson = pretApiService.obtenirTousLesTaux();
+            LOGGER.info("Taux récupérés avec succès: " + tauxJson);
+            response.getWriter().write(tauxJson);
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des taux depuis la base de données: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.getWriter().write("{\"error\": \"Service de taux indisponible\", \"message\": \"Impossible de récupérer les taux depuis la base de données. Veuillez vérifier que l'API Prêt est démarrée et que la base de données contient des taux.\"}");
         }
     }
     
