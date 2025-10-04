@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee 
+         https://jakarta.ee/xml/ns/jakartaee/web-app_4_0.xsd"
+         version="5.0">
+
+    <display-name>Central Banque</display-name>
+    <description>Module central de gestion bancaire</description>
+
+    <!-- Configuration de la page d'accueil -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>jsp/accueil.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- Servlet pour la gestion des comptes -->
+    <servlet>
+        <servlet-name>CompteServlet</servlet-name>
+        <servlet-class>com.banque.central.controller.CompteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CompteServlet</servlet-name>
+        <url-pattern>/compte/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet pour la gestion de l'épargne -->
+    <servlet>
+        <servlet-name>EpargneServlet</servlet-name>
+        <servlet-class>com.banque.central.controller.EpargneServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>EpargneServlet</servlet-name>
+        <url-pattern>/epargne/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet pour la gestion des prêts -->
+    <servlet>
+        <servlet-name>PretServlet</servlet-name>
+        <servlet-class>com.banque.central.controller.PretServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PretServlet</servlet-name>
+        <url-pattern>/pret/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet pour l'accueil -->
+    <servlet>
+        <servlet-name>AccueilServlet</servlet-name>
+        <servlet-class>com.banque.central.controller.AccueilServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AccueilServlet</servlet-name>
+        <url-pattern>/accueil</url-pattern>
+    </servlet-mapping>
+
+    <!-- Configuration des erreurs -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/jsp/erreur.jsp</location>
+    </error-page>
+    
+    <error-page>
+        <error-code>500</error-code>
+        <location>/jsp/erreur.jsp</location>
+    </error-page>
+
+    <!-- Configuration de l'encodage -->
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>com.banque.central.controller.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Configuration de session -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+</web-app>
