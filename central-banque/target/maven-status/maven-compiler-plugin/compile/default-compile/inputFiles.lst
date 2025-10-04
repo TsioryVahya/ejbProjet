@@ -1,9 +1,12 @@
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\config\ApiConfig.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\AccueilServlet.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\CharacterEncodingFilter.java
+A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\ClientServlet.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\CompteServlet.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\EpargneServlet.java
+A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\OperationServlet.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\controller\PretServlet.java
+A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\dto\ClientDTO.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\dto\CompteDTO.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\dto\EpargneDTO.java
 A:\M.Tahina\ejbProjet\central-banque\src\main\java\com\banque\central\dto\OperationDTO.java
