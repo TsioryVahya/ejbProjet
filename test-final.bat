@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 echo 1. Vérification des déploiements WildFly...
-set WILDFLY_DEPLOYMENTS=G:\ITU\S5\PROG\wildfly\wildfly-37.0.1.Final\standalone\deployments
+set WILDFLY_DEPLOYMENTS=D:\wildfly-37.0.1.Final\standalone\deployments
 
 if exist "%WILDFLY_DEPLOYMENTS%\compte-courant-ejb-1.0.0.jar.deployed" (
     echo ✓ Module EJB déployé

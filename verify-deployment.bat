@@ -4,7 +4,7 @@ echo    VERIFICATION DEPLOIEMENT FINAL
 echo ========================================
 echo.
 
-set WILDFLY_HOME=G:\ITU\S5\PROG\wildfly\wildfly-37.0.1.Final
+set WILDFLY_HOME=D:\wildfly-37.0.1.Final
 set WILDFLY_DEPLOYMENTS=%WILDFLY_HOME%\standalone\deployments
 set JBOSS_CLI=%WILDFLY_HOME%\bin\jboss-cli.bat
 

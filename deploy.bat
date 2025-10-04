@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 REM Configuration des chemins
-set WILDFLY_DEPLOYMENTS=G:\ITU\S5\PROG\wildfly\wildfly-37.0.1.Final\standalone\deployments
+set WILDFLY_DEPLOYMENTS=D:\wildfly-37.0.1.Final\standalone\deployments
 set PROJECT_ROOT=%~dp0
 set EJB_MODULE=%PROJECT_ROOT%compte-courant-ejb
 set CENTRAL_MODULE=%PROJECT_ROOT%central-banque

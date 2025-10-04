@@ -4,7 +4,7 @@ echo    DEMARRAGE WILDFLY
 echo ========================================
 echo.
 
-set WILDFLY_HOME=G:\ITU\S5\PROG\wildfly\wildfly-37.0.1.Final
+set WILDFLY_HOME=D:\wildfly-37.0.1.Final
 
 if not exist "%WILDFLY_HOME%\bin\standalone.bat" (
     echo ERREUR: WildFly introuvable dans %WILDFLY_HOME%
