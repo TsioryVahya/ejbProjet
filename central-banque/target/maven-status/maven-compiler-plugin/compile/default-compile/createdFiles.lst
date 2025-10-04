@@ -1,7 +1,10 @@
 com\banque\central\dto\RetraitEpargneDTO.class
 com\banque\central\controller\AccueilServlet.class
 com\banque\central\controller\PretServlet.class
+com\banque\central\service\EpargneApiService$1.class
+com\banque\central\service\PretApiService$1.class
 com\banque\central\service\PretApiService.class
+com\banque\central\controller\OperationServlet.class
 com\banque\central\dto\EpargneDTO.class
 com\banque\central\dto\OperationDTO.class
 com\banque\central\dto\RemboursementDTO.class
@@ -11,4 +14,6 @@ com\banque\central\service\EpargneApiService.class
 com\banque\central\controller\EpargneServlet.class
 com\banque\central\config\ApiConfig.class
 com\banque\central\controller\CharacterEncodingFilter.class
+com\banque\central\dto\ClientDTO.class
+com\banque\central\controller\ClientServlet.class
 com\banque\central\dto\CompteDTO.class

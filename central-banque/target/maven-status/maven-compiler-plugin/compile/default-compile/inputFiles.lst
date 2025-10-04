@@ -1,9 +1,12 @@
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\config\ApiConfig.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\AccueilServlet.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\CharacterEncodingFilter.java
+G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\ClientServlet.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\CompteServlet.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\EpargneServlet.java
+G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\OperationServlet.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\controller\PretServlet.java
+G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\dto\ClientDTO.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\dto\CompteDTO.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\dto\EpargneDTO.java
 G:\ITU\S5\PROG\ejbProjet\central-banque\src\main\java\com\banque\central\dto\OperationDTO.java
