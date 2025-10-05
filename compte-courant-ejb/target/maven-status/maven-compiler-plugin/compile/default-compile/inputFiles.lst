@@ -1,8 +1,8 @@
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceLocal.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceRemote.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Client.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Compte.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Operation.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeCompte.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeOperation.java
-A:\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\service\CompteServiceBean.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceLocal.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceRemote.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Client.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Compte.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Operation.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeCompte.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeOperation.java
+D:\ITU\S5\M.Tahina\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\service\CompteServiceBean.java

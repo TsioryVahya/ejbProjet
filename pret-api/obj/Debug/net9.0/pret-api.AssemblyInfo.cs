@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("pret-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+680e841a216168e91296026d1597f4d0e6274764")]
 [assembly: System.Reflection.AssemblyProductAttribute("pret-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("pret-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
