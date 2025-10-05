@@ -3,13 +3,18 @@ package com.banque.central.dto;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EpargneDTO implements Serializable {
     private Long idDepotEpargne;
     private BigDecimal montantEpargne;
     private LocalDateTime dateEpargne;
     private Long idCompte;
     private String numeroCompte;
+    private Long idTaux;
     private BigDecimal tauxEpargne;
     private BigDecimal interetsCalcules;
     private BigDecimal montantDisponible;
@@ -44,8 +49,20 @@ public class EpargneDTO implements Serializable {
     public String getNumeroCompte() { return numeroCompte; }
     public void setNumeroCompte(String numeroCompte) { this.numeroCompte = numeroCompte; }
     
+    public Long getIdTaux() { return idTaux; }
+    public void setIdTaux(Long idTaux) { this.idTaux = idTaux; }
+    
     public BigDecimal getTauxEpargne() { return tauxEpargne; }
     public void setTauxEpargne(BigDecimal tauxEpargne) { this.tauxEpargne = tauxEpargne; }
+    
+    @JsonSetter("tauxEpargne")
+    public void setTauxEpargneFromObject(JsonNode tauxNode) {
+        if (tauxNode.isNumber()) {
+            this.tauxEpargne = tauxNode.decimalValue();
+        } else if (tauxNode.isObject() && tauxNode.has("pourcentage")) {
+            this.tauxEpargne = tauxNode.get("pourcentage").decimalValue();
+        }
+    }
     
     public BigDecimal getInteretsCalcules() { return interetsCalcules; }
     public void setInteretsCalcules(BigDecimal interetsCalcules) { this.interetsCalcules = interetsCalcules; }

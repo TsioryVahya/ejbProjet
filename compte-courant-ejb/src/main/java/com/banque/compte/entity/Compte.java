@@ -48,6 +48,7 @@ public class Compte implements Serializable {
     public Compte(String numeroCompte, Client client, TypeCompte typeCompte) {
         this();
         this.numeroCompte = numeroCompte;
+        this.client = client;
         this.typeCompte = typeCompte;
     }
     

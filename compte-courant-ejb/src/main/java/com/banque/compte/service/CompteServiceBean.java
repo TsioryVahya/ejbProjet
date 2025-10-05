@@ -84,13 +84,23 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     
     @Override
     public Compte trouverCompteParId(Long idCompte) {
-        return em.find(Compte.class, idCompte);
+        TypedQuery<Compte> query = em.createQuery(
+            "SELECT c FROM Compte c " +
+            "LEFT JOIN FETCH c.client " +
+            "LEFT JOIN FETCH c.typeCompte " +
+            "WHERE c.idCompte = :idCompte", Compte.class);
+        query.setParameter("idCompte", idCompte);
+        List<Compte> comptes = query.getResultList();
+        return comptes.isEmpty() ? null : comptes.get(0);
     }
     
     @Override
     public Compte trouverCompteParNumero(String numeroCompte) {
         TypedQuery<Compte> query = em.createQuery(
-            "SELECT c FROM Compte c WHERE c.numeroCompte = :numeroCompte", Compte.class);
+            "SELECT c FROM Compte c " +
+            "LEFT JOIN FETCH c.client " +
+            "LEFT JOIN FETCH c.typeCompte " +
+            "WHERE c.numeroCompte = :numeroCompte", Compte.class);
         query.setParameter("numeroCompte", numeroCompte);
         List<Compte> comptes = query.getResultList();
         return comptes.isEmpty() ? null : comptes.get(0);
@@ -99,7 +109,10 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
     @Override
     public List<Compte> listerComptesParClient(Long idClient) {
         TypedQuery<Compte> query = em.createQuery(
-            "SELECT c FROM Compte c WHERE c.client.idClient = :idClient ORDER BY c.dateCreation DESC", Compte.class);
+            "SELECT c FROM Compte c " +
+            "LEFT JOIN FETCH c.client " +
+            "LEFT JOIN FETCH c.typeCompte " +
+            "WHERE c.client.idClient = :idClient ORDER BY c.dateCreation DESC", Compte.class);
         query.setParameter("idClient", idClient);
         return query.getResultList();
     }

@@ -80,8 +80,9 @@ public class EpargneApiService {
             if (response.statusCode() == 201) {
                 return objectMapper.readValue(response.body(), EpargneDTO.class);
             } else {
+                String errorDetails = parseErrorMessage(response.body(), response.statusCode());
                 LOGGER.warning("Erreur lors de la création du dépôt d'épargne: " + response.statusCode() + " - " + response.body());
-                throw new Exception("Erreur lors de la création du dépôt d'épargne: " + response.body());
+                throw new Exception(errorDetails);
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.severe("Erreur de communication avec l'API épargne: " + e.getMessage());
@@ -234,6 +235,41 @@ public class EpargneApiService {
         } catch (Exception e) {
             LOGGER.warning("API épargne indisponible: " + e.getMessage());
             return false;
+        }
+    }
+    
+    // ===== UTILITAIRES POUR LA GESTION DES ERREURS =====
+    
+    private String parseErrorMessage(String responseBody, int statusCode) {
+        try {
+            // Essayer de parser la réponse JSON pour extraire le message d'erreur
+            var jsonNode = objectMapper.readTree(responseBody);
+            String message = jsonNode.has("message") ? jsonNode.get("message").asText() : null;
+            
+            // Fournir des messages détaillés selon le code de statut
+            switch (statusCode) {
+                case 400:
+                    return message != null ? "Données invalides: " + message : "Données de la requête invalides";
+                case 404:
+                    return message != null ? "Ressource introuvable: " + message : "Compte d'épargne introuvable";
+                case 500:
+                    if (message != null && !message.equals("Erreur interne du serveur")) {
+                        return "Erreur serveur: " + message;
+                    }
+                    // Messages détaillés pour les erreurs 500 courantes
+                    return "Service d'épargne temporairement indisponible. Vérifiez que:\n" +
+                           "• L'API C# d'épargne est démarrée (https://localhost:7001)\n" +
+                           "• La base de données PostgreSQL est accessible\n" +
+                           "• Les tables d'épargne existent dans la base de données\n" +
+                           "• Un taux d'épargne est configuré";
+                case 503:
+                    return "Service d'épargne temporairement indisponible";
+                default:
+                    return message != null ? message : "Erreur lors de la communication avec le service d'épargne (Code: " + statusCode + ")";
+            }
+        } catch (Exception e) {
+            // Si on ne peut pas parser la réponse JSON, retourner un message générique avec le code
+            return "Erreur lors de la communication avec le service d'épargne (Code: " + statusCode + ")";
         }
     }
 }

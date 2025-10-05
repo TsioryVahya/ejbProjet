@@ -7,13 +7,13 @@
 
     <persistence-unit name="BanquePU" transaction-type="JTA">
         <jta-data-source>java:jboss/datasources/BanqueDS</jta-data-source>
-        
+
         <class>com.banque.compte.entity.Client</class>
         <class>com.banque.compte.entity.TypeCompte</class>
         <class>com.banque.compte.entity.Compte</class>
         <class>com.banque.compte.entity.TypeOperation</class>
         <class>com.banque.compte.entity.Operation</class>
-        
+
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="none"/>

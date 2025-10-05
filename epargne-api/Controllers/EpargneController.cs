@@ -182,7 +182,7 @@ namespace EpargneApi.Controllers
                     return NotFound(new { message = "Dépôt d'épargne introuvable" });
                 }
 
-                var date = dateCalcul ?? DateTime.Now;
+                var date = dateCalcul ?? DateTime.UtcNow;
                 var interets = _epargneService.CalculerInterets(depot, date);
                 var montantDisponible = _epargneService.CalculerMontantDisponible(depot);
 
@@ -244,7 +244,7 @@ namespace EpargneApi.Controllers
         [HttpGet("health")]
         public IActionResult Health()
         {
-            return Ok(new { status = "healthy", service = "epargne-api", timestamp = DateTime.Now });
+            return Ok(new { status = "healthy", service = "epargne-api", timestamp = DateTime.UtcNow });
         }
     }
 

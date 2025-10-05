@@ -50,7 +50,7 @@ namespace EpargneApi.Services
             var depot = new DepotEpargne
             {
                 MontantEpargne = montant,
-                DateEpargne = DateTime.Now,
+                DateEpargne = DateTime.UtcNow,
                 IdCompte = idCompte,
                 IdTaux = tauxActuel.IdTaux
             };
@@ -109,7 +109,7 @@ namespace EpargneApi.Services
             var retrait = new RetraitEpargne
             {
                 MontantRetraitEpargne = montant,
-                DateRetraitEpargne = DateTime.Now,
+                DateRetraitEpargne = DateTime.UtcNow,
                 IdDepotEpargne = idDepot
             };
 
@@ -147,7 +147,7 @@ namespace EpargneApi.Services
         public decimal CalculerMontantDisponible(DepotEpargne depot)
         {
             var montantInitial = depot.MontantEpargne;
-            var interets = CalculerInterets(depot, DateTime.Now);
+            var interets = CalculerInterets(depot, DateTime.UtcNow);
             var totalRetraits = depot.RetraitsEpargne?.Sum(r => r.MontantRetraitEpargne) ?? 0;
             
             return montantInitial + interets - totalRetraits;
@@ -183,7 +183,7 @@ namespace EpargneApi.Services
             
             var totalDepose = depots.Sum(d => d.MontantEpargne);
             var totalRetraits = depots.SelectMany(d => d.RetraitsEpargne).Sum(r => r.MontantRetraitEpargne);
-            var totalInterets = depots.Sum(d => CalculerInterets(d, DateTime.Now));
+            var totalInterets = depots.Sum(d => CalculerInterets(d, DateTime.UtcNow));
             var soldeActuel = depots.Sum(d => CalculerMontantDisponible(d));
 
             return new

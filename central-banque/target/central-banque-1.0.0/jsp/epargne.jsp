@@ -134,7 +134,7 @@
                                                 </div>
                                                 <div class="text-xs text-gray-400 mt-1">
                                                     <i class="fas fa-calendar mr-1"></i>
-                                                    Créé le <fmt:formatDate value="${compte.dateCreation}" pattern="dd/MM/yyyy"/>
+                                                    Créé le ${compte.dateCreation}
                                                 </div>
                                             </div>
                                         </div>

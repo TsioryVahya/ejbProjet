@@ -53,7 +53,7 @@ namespace PretApi.Services
             var pret = new Pret
             {
                 Duree = dureeEnMois,
-                DatePret = DateTime.Now,
+                DatePret = DateTime.UtcNow,
                 MontantInitial = montant,
                 MontantRestant = montant,
                 Statut = "ACTIF",
