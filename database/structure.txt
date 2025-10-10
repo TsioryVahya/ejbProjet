@@ -1,0 +1,64 @@
+banque-projet/
+│
+├── central-banque/                # Module central (Java EE - WildFly)
+│   ├── src/main/java/
+│   │    ├── com.banque.central.controller   # Servlets
+│   │    ├── com.banque.central.dto          # DTOs communs
+│   │    ├── com.banque.central.service      # Services (EJB Remote + REST Client)
+│   │    ├── com.banque.central.config       # Config (clients REST)
+│   │
+│   ├── src/main/webapp/
+│   │    ├── WEB-INF/
+│   │    │     └── web.xml
+│   │    ├── jsp/
+│   │    │     ├── accueil.jsp
+│   │    │     ├── compte.jsp
+│   │    │     ├── epargne.jsp
+│   │    │     └── pret.jsp
+│   │
+│   └── pom.xml
+│
+├── compte-courant-ejb/            # Module Compte Courant (EJB + JPA)
+│   ├── src/main/java/
+│   │    ├── com.banque.compte.ejb         # Interfaces Remote/Local
+│   │    ├── com.banque.compte.entity      # Entités JPA (Compte, Operation)
+│   │    ├── com.banque.compte.dao         # DAO
+│   │    ├── com.banque.compte.service     # Logique métier
+│   │
+│   ├── META-INF/
+│   │    └── persistence.xml              # Config JPA
+│   │
+│   └── pom.xml
+│
+├── epargne-api/                   # Module Epargne (C# REST API)
+│   ├── Controllers/
+│   │    └── EpargneController.cs
+│   ├── Models/
+│   │    ├── CompteEpargne.cs
+│   │    ├── Depot.cs
+│   │    └── Retrait.cs
+│   ├── Services/
+│   │    └── EpargneService.cs
+│   ├── Program.cs
+│   ├── Startup.cs
+│   └── epargne-api.csproj
+│
+├── pret-api/                      # Module Prêt (C# REST API)
+│   ├── Controllers/
+│   │    └── PretController.cs
+│   ├── Models/
+│   │    ├── Pret.cs
+│   │    ├── Remboursement.cs
+│   │    └── TauxPret.cs
+│   ├── Services/
+│   │    └── PretService.cs
+│   ├── Program.cs
+│   ├── Startup.cs
+│   └── pret-api.csproj
+│
+├── database/                      # Scripts PostgreSQL
+│   ├── schema.sql                 # Ton script de création (tables, vues, fonctions)
+│   ├── data.sql                   # Données de base
+│   └── README.md
+│
+└── README.md                      # Documentation du projet
