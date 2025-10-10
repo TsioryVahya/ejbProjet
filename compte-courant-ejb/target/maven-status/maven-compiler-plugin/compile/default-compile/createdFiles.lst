@@ -1,8 +1,0 @@
-com\banque\compte\ejb\CompteServiceLocal.class
-com\banque\compte\entity\TypeOperation.class
-com\banque\compte\service\CompteServiceBean.class
-com\banque\compte\ejb\CompteServiceRemote.class
-com\banque\compte\entity\Compte.class
-com\banque\compte\entity\TypeCompte.class
-com\banque\compte\entity\Operation.class
-com\banque\compte\entity\Client.class

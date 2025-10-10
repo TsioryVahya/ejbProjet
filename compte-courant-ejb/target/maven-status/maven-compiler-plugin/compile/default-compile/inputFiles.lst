@@ -1,8 +1,0 @@
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceLocal.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\ejb\CompteServiceRemote.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Client.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Compte.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\Operation.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeCompte.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\entity\TypeOperation.java
-G:\ITU\S5\PROG\ejbProjet\compte-courant-ejb\src\main\java\com\banque\compte\service\CompteServiceBean.java
