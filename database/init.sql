@@ -114,6 +114,7 @@ CREATE TABLE DepotEpargne(
    FOREIGN KEY(idCompte) REFERENCES Compte(idCompte) ON DELETE CASCADE,
    FOREIGN KEY(idTaux) REFERENCES TauxEpargne(idTaux) ON DELETE RESTRICT
 );
+ALTER TABLE DepotEpargne ADD COLUMN duree INTEGER NOT NULL CHECK (duree > 0);
 
 -- Table RetraitEpargne
 CREATE TABLE RetraitEpargne(

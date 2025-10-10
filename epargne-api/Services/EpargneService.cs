@@ -12,11 +12,27 @@ namespace EpargneApi.Services
             _context = context;
         }
 
+        // ===== GESTION DES TAUX D'ÉPARGNE =====
+
+        public async Task<List<TauxEpargne>> ObtenirTousLesTauxAsync()
+        {
+            return await _context.TauxEpargne
+                .OrderByDescending(t => t.DateApplication)
+                .ToListAsync();
+        }
+
+        public async Task<TauxEpargne?> ObtenirTauxActuelAsync()
+        {
+            return await _context.TauxEpargne
+                .OrderByDescending(t => t.DateApplication)
+                .FirstOrDefaultAsync();
+        }
+
         // ===== GESTION DES DÉPÔTS D'ÉPARGNE =====
 
-        public async Task<DepotEpargne> CreerDepotEpargneAsync(long idCompte, decimal montant)
+        public async Task<DepotEpargne> CreerDepotEpargneAsync(long idCompte, decimal montant, int duree, long? idTaux = null)
         {
-            // Vérifier que le compte existe et est de type épargne
+            // Vérifier que le compte existe et est actif
             var compte = await _context.Comptes
                 .Include(c => c.TypeCompte)
                 .FirstOrDefaultAsync(c => c.IdCompte == idCompte && c.Actif);
@@ -26,33 +42,48 @@ namespace EpargneApi.Services
                 throw new ArgumentException("Compte introuvable ou inactif");
             }
 
-            if (!compte.TypeCompte!.NomTypeCompte.Contains("Épargne") && 
-                !compte.TypeCompte.NomTypeCompte.Contains("Livret"))
-            {
-                throw new ArgumentException("Ce compte n'est pas un compte d'épargne");
-            }
+            // Permettre la création de dépôts d'épargne depuis n'importe quel type de compte
+            // Suppression de la validation du type de compte
 
             if (montant <= 0)
             {
                 throw new ArgumentException("Le montant doit être positif");
             }
 
-            // Récupérer le taux d'épargne actuel
-            var tauxActuel = await _context.TauxEpargne
-                .OrderByDescending(t => t.DateApplication)
-                .FirstOrDefaultAsync();
-
-            if (tauxActuel == null)
+            if (duree <= 0)
             {
-                throw new InvalidOperationException("Aucun taux d'épargne configuré");
+                throw new ArgumentException("La durée doit être positive");
+            }
+
+            // Récupérer le taux d'épargne (soit celui spécifié, soit le plus récent)
+            TauxEpargne tauxUtilise;
+            if (idTaux.HasValue)
+            {
+                tauxUtilise = await _context.TauxEpargne
+                    .FirstOrDefaultAsync(t => t.IdTaux == idTaux.Value);
+                if (tauxUtilise == null)
+                {
+                    throw new ArgumentException("Taux d'épargne introuvable");
+                }
+            }
+            else
+            {
+                tauxUtilise = await _context.TauxEpargne
+                    .OrderByDescending(t => t.DateApplication)
+                    .FirstOrDefaultAsync();
+                if (tauxUtilise == null)
+                {
+                    throw new InvalidOperationException("Aucun taux d'épargne configuré");
+                }
             }
 
             var depot = new DepotEpargne
             {
                 MontantEpargne = montant,
-                DateEpargne = DateTime.Now,
+                DateEpargne = DateTime.UtcNow,
+                Duree = duree,
                 IdCompte = idCompte,
-                IdTaux = tauxActuel.IdTaux
+                IdTaux = tauxUtilise.IdTaux
             };
 
             _context.DepotsEpargne.Add(depot);
@@ -61,11 +92,24 @@ namespace EpargneApi.Services
             return depot;
         }
 
+        public async Task<List<DepotEpargne>> ObtenirTousLesDepotsAsync()
+        {
+            return await _context.DepotsEpargne
+                .Include(d => d.TauxEpargne)
+                .Include(d => d.RetraitsEpargne)
+                .Include(d => d.Compte)
+                    .ThenInclude(c => c.Client)
+                .OrderByDescending(d => d.DateEpargne)
+                .ToListAsync();
+        }
+
         public async Task<List<DepotEpargne>> ObtenirDepotsParCompteAsync(long idCompte)
         {
             return await _context.DepotsEpargne
                 .Include(d => d.TauxEpargne)
                 .Include(d => d.RetraitsEpargne)
+                .Include(d => d.Compte)
+                    .ThenInclude(c => c.Client)
                 .Where(d => d.IdCompte == idCompte)
                 .OrderByDescending(d => d.DateEpargne)
                 .ToListAsync();
@@ -109,7 +153,7 @@ namespace EpargneApi.Services
             var retrait = new RetraitEpargne
             {
                 MontantRetraitEpargne = montant,
-                DateRetraitEpargne = DateTime.Now,
+                DateRetraitEpargne = DateTime.UtcNow,
                 IdDepotEpargne = idDepot
             };
 
@@ -147,27 +191,12 @@ namespace EpargneApi.Services
         public decimal CalculerMontantDisponible(DepotEpargne depot)
         {
             var montantInitial = depot.MontantEpargne;
-            var interets = CalculerInterets(depot, DateTime.Now);
+            var interets = CalculerInterets(depot, DateTime.UtcNow);
             var totalRetraits = depot.RetraitsEpargne?.Sum(r => r.MontantRetraitEpargne) ?? 0;
             
             return montantInitial + interets - totalRetraits;
         }
 
-        // ===== GESTION DES TAUX =====
-
-        public async Task<List<TauxEpargne>> ObtenirTousLesTauxAsync()
-        {
-            return await _context.TauxEpargne
-                .OrderByDescending(t => t.DateApplication)
-                .ToListAsync();
-        }
-
-        public async Task<TauxEpargne?> ObtenirTauxActuelAsync()
-        {
-            return await _context.TauxEpargne
-                .OrderByDescending(t => t.DateApplication)
-                .FirstOrDefaultAsync();
-        }
 
         // ===== RAPPORTS ET STATISTIQUES =====
 
@@ -183,7 +212,7 @@ namespace EpargneApi.Services
             
             var totalDepose = depots.Sum(d => d.MontantEpargne);
             var totalRetraits = depots.SelectMany(d => d.RetraitsEpargne).Sum(r => r.MontantRetraitEpargne);
-            var totalInterets = depots.Sum(d => CalculerInterets(d, DateTime.Now));
+            var totalInterets = depots.Sum(d => CalculerInterets(d, DateTime.UtcNow));
             var soldeActuel = depots.Sum(d => CalculerMontantDisponible(d));
 
             return new

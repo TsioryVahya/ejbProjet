@@ -1,8 +1,9 @@
 package com.banque.central.service;
 
 import com.banque.central.config.ApiConfig;
-import com.banque.central.dto.EpargneDTO;
+import com.banque.central.dto.DepotEpargneDTO;
 import com.banque.central.dto.RetraitEpargneDTO;
+import com.banque.central.dto.TauxEpargneDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -61,11 +62,93 @@ public class EpargneApiService {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
     
+    // ===== GESTION DES TAUX D'ÉPARGNE =====
+    
+    public List<TauxEpargneDTO> obtenirTousLesTaux() throws Exception {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/taux"))
+                    .header("Accept", ApiConfig.ACCEPT_JSON)
+                    .timeout(Duration.ofMillis(ApiConfig.READ_TIMEOUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                TauxEpargneDTO[] taux = objectMapper.readValue(response.body(), TauxEpargneDTO[].class);
+                return Arrays.asList(taux);
+            } else {
+                LOGGER.warning("Erreur lors de la récupération des taux d'épargne: " + response.statusCode());
+                throw new Exception("Erreur lors de la récupération des taux d'épargne");
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Erreur de communication avec l'API épargne: " + e.getMessage());
+            throw new Exception(ApiConfig.ERROR_NETWORK, e);
+        }
+    }
+    
+    public TauxEpargneDTO obtenirTauxActuel() throws Exception {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/taux/actuel"))
+                    .header("Accept", ApiConfig.ACCEPT_JSON)
+                    .timeout(Duration.ofMillis(ApiConfig.READ_TIMEOUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), TauxEpargneDTO.class);
+            } else if (response.statusCode() == 404) {
+                return null;
+            } else {
+                LOGGER.warning("Erreur lors de la récupération du taux actuel: " + response.statusCode());
+                throw new Exception("Erreur lors de la récupération du taux actuel");
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Erreur de communication avec l'API épargne: " + e.getMessage());
+            throw new Exception(ApiConfig.ERROR_NETWORK, e);
+        }
+    }
+
     // ===== GESTION DES DÉPÔTS D'ÉPARGNE =====
     
-    public EpargneDTO creerDepotEpargne(Long idCompte, BigDecimal montant) throws Exception {
+    public List<DepotEpargneDTO> obtenirTousLesDepots() throws Exception {
         try {
-            String requestBody = String.format("{\"idCompte\":%d,\"montant\":%s}", idCompte, montant.toString());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/depots"))
+                    .header("Accept", ApiConfig.ACCEPT_JSON)
+                    .timeout(Duration.ofMillis(ApiConfig.READ_TIMEOUT))
+                    .GET()
+                    .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                DepotEpargneDTO[] depots = objectMapper.readValue(response.body(), DepotEpargneDTO[].class);
+                return Arrays.asList(depots);
+            } else {
+                LOGGER.warning("Erreur lors de la récupération de tous les dépôts d'épargne: " + response.statusCode());
+                throw new Exception("Erreur lors de la récupération de tous les dépôts d'épargne");
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe("Erreur de communication avec l'API épargne: " + e.getMessage());
+            throw new Exception(ApiConfig.ERROR_NETWORK, e);
+        }
+    }
+    
+    public DepotEpargneDTO creerDepotEpargne(Long idCompte, BigDecimal montant, Integer duree, Long idTaux) throws Exception {
+        try {
+            String requestBody;
+            if (idTaux != null) {
+                requestBody = String.format("{\"idCompte\":%d,\"montant\":%s,\"duree\":%d,\"idTaux\":%d}", 
+                    idCompte, montant.toString(), duree, idTaux);
+            } else {
+                requestBody = String.format("{\"idCompte\":%d,\"montant\":%s,\"duree\":%d}", 
+                    idCompte, montant.toString(), duree);
+            }
             
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/depots"))
@@ -78,7 +161,7 @@ public class EpargneApiService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             if (response.statusCode() == 201) {
-                return objectMapper.readValue(response.body(), EpargneDTO.class);
+                return objectMapper.readValue(response.body(), DepotEpargneDTO.class);
             } else {
                 LOGGER.warning("Erreur lors de la création du dépôt d'épargne: " + response.statusCode() + " - " + response.body());
                 throw new Exception("Erreur lors de la création du dépôt d'épargne: " + response.body());
@@ -89,7 +172,7 @@ public class EpargneApiService {
         }
     }
     
-    public EpargneDTO obtenirDepotEpargne(Long idDepot) throws Exception {
+    public DepotEpargneDTO obtenirDepotEpargne(Long idDepot) throws Exception {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/depots/" + idDepot))
@@ -101,7 +184,7 @@ public class EpargneApiService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             if (response.statusCode() == 200) {
-                return objectMapper.readValue(response.body(), EpargneDTO.class);
+                return objectMapper.readValue(response.body(), DepotEpargneDTO.class);
             } else if (response.statusCode() == 404) {
                 return null;
             } else {
@@ -114,7 +197,7 @@ public class EpargneApiService {
         }
     }
     
-    public List<EpargneDTO> obtenirDepotsParCompte(Long idCompte) throws Exception {
+    public List<DepotEpargneDTO> obtenirDepotsParCompte(Long idCompte) throws Exception {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ApiConfig.EPARGNE_API_BASE_URL + "/comptes/" + idCompte + "/depots"))
@@ -126,7 +209,7 @@ public class EpargneApiService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             if (response.statusCode() == 200) {
-                EpargneDTO[] depots = objectMapper.readValue(response.body(), EpargneDTO[].class);
+                DepotEpargneDTO[] depots = objectMapper.readValue(response.body(), DepotEpargneDTO[].class);
                 return Arrays.asList(depots);
             } else {
                 LOGGER.warning("Erreur lors de la récupération des dépôts d'épargne: " + response.statusCode());

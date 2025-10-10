@@ -53,7 +53,7 @@ namespace PretApi.Services
             var pret = new Pret
             {
                 Duree = dureeEnMois,
-                DatePret = DateTime.Now,
+                DatePret = DateTime.UtcNow,
                 MontantInitial = montant,
                 MontantRestant = montant,
                 Statut = "ACTIF",
@@ -151,7 +151,7 @@ namespace PretApi.Services
             var remboursement = new Remboursement
             {
                 MontantRembourser = montant,
-                DateRemboursement = DateTime.Now,
+                DateRemboursement = DateTime.UtcNow,
                 IdPret = idPret
             };
 
@@ -340,11 +340,7 @@ namespace PretApi.Services
                 throw new InvalidOperationException("Montant total des prêts ne peut pas dépasser 100 000€");
             }
 
-            // Règle métier : montant minimum 1000€, maximum 50 000€ par prêt
-            if (montant < 1000)
-            {
-                throw new InvalidOperationException("Montant minimum d'un prêt : 1 000€");
-            }
+            // Règle métier : maximum 50 000€ par prêt
 
             if (montant > 50000)
             {

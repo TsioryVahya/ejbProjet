@@ -17,14 +17,66 @@ namespace EpargneApi.Controllers
             _logger = logger;
         }
 
+        // ===== ENDPOINTS POUR LES TAUX D'ÉPARGNE =====
+
+        [HttpGet("taux")]
+        public async Task<ActionResult<List<TauxEpargne>>> ObtenirTousLesTaux()
+        {
+            try
+            {
+                var taux = await _epargneService.ObtenirTousLesTauxAsync();
+                return Ok(taux);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Erreur lors de la récupération des taux: {ex.Message}");
+                return StatusCode(500, new { message = "Erreur interne du serveur" });
+            }
+        }
+
+        [HttpGet("taux/actuel")]
+        public async Task<ActionResult<TauxEpargne>> ObtenirTauxActuel()
+        {
+            try
+            {
+                var taux = await _epargneService.ObtenirTauxActuelAsync();
+                if (taux == null)
+                {
+                    return NotFound(new { message = "Aucun taux d'épargne configuré" });
+                }
+                return Ok(taux);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Erreur lors de la récupération du taux actuel: {ex.Message}");
+                return StatusCode(500, new { message = "Erreur interne du serveur" });
+            }
+        }
+
         // ===== ENDPOINTS POUR LES DÉPÔTS D'ÉPARGNE =====
+
+        [HttpGet("depots")]
+        public async Task<ActionResult<List<DepotEpargneResponse>>> ObtenirTousLesDepots()
+        {
+            try
+            {
+                var depots = await _epargneService.ObtenirTousLesDepotsAsync();
+                var response = depots.Select(DepotEpargneResponse.FromEntity).ToList();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erreur lors de la récupération de tous les dépôts");
+                return StatusCode(500, new { message = "Erreur interne du serveur" });
+            }
+        }
 
         [HttpPost("depots")]
         public async Task<ActionResult<DepotEpargne>> CreerDepot([FromBody] CreerDepotRequest request)
         {
             try
             {
-                var depot = await _epargneService.CreerDepotEpargneAsync(request.IdCompte, request.Montant);
+                var depot = await _epargneService.CreerDepotEpargneAsync(request.IdCompte, request.Montant, request.Duree, request.IdTaux);
                 _logger.LogInformation($"Dépôt d'épargne créé: {depot.IdDepotEpargne} pour le compte {request.IdCompte}");
                 return CreatedAtAction(nameof(ObtenirDepot), new { id = depot.IdDepotEpargne }, depot);
             }
@@ -61,12 +113,13 @@ namespace EpargneApi.Controllers
         }
 
         [HttpGet("comptes/{idCompte}/depots")]
-        public async Task<ActionResult<List<DepotEpargne>>> ObtenirDepotsParCompte(long idCompte)
+        public async Task<ActionResult<List<DepotEpargneResponse>>> ObtenirDepotsParCompte(long idCompte)
         {
             try
             {
                 var depots = await _epargneService.ObtenirDepotsParCompteAsync(idCompte);
-                return Ok(depots);
+                var response = depots.Select(DepotEpargneResponse.FromEntity).ToList();
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -182,7 +235,7 @@ namespace EpargneApi.Controllers
                     return NotFound(new { message = "Dépôt d'épargne introuvable" });
                 }
 
-                var date = dateCalcul ?? DateTime.Now;
+                var date = dateCalcul ?? DateTime.UtcNow;
                 var interets = _epargneService.CalculerInterets(depot, date);
                 var montantDisponible = _epargneService.CalculerMontantDisponible(depot);
 
@@ -203,48 +256,14 @@ namespace EpargneApi.Controllers
             }
         }
 
-        // ===== ENDPOINTS POUR LES TAUX =====
 
-        [HttpGet("taux")]
-        public async Task<ActionResult<List<TauxEpargne>>> ObtenirTaux()
-        {
-            try
-            {
-                var taux = await _epargneService.ObtenirTousLesTauxAsync();
-                return Ok(taux);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des taux d'épargne");
-                return StatusCode(500, new { message = "Erreur interne du serveur" });
-            }
-        }
-
-        [HttpGet("taux/actuel")]
-        public async Task<ActionResult<TauxEpargne>> ObtenirTauxActuel()
-        {
-            try
-            {
-                var taux = await _epargneService.ObtenirTauxActuelAsync();
-                if (taux == null)
-                {
-                    return NotFound(new { message = "Aucun taux d'épargne configuré" });
-                }
-                return Ok(taux);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération du taux actuel");
-                return StatusCode(500, new { message = "Erreur interne du serveur" });
-            }
-        }
 
         // ===== ENDPOINT DE SANTÉ =====
 
         [HttpGet("health")]
         public IActionResult Health()
         {
-            return Ok(new { status = "healthy", service = "epargne-api", timestamp = DateTime.Now });
+            return Ok(new { status = "healthy", service = "epargne-api", timestamp = DateTime.UtcNow });
         }
     }
 
@@ -254,6 +273,8 @@ namespace EpargneApi.Controllers
     {
         public long IdCompte { get; set; }
         public decimal Montant { get; set; }
+        public int Duree { get; set; }
+        public long? IdTaux { get; set; }
     }
 
     public class CreerRetraitRequest

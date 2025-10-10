@@ -17,6 +17,10 @@ namespace EpargneApi.Models
         [Column("dateepargne")]
         public DateTime DateEpargne { get; set; }
 
+        [Column("duree")]
+        [Required]
+        public int Duree { get; set; }
+
         [Column("idcompte")]
         [Required]
         public long IdCompte { get; set; }

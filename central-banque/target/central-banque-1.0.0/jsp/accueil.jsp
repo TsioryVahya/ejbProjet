@@ -237,13 +237,21 @@
                                 </dl>
                             </div>
                         </div>
-                        <div class="mt-5">
+                        <div class="mt-5 space-y-2">
                             <div class="rounded-md shadow">
                                 <a href="${pageContext.request.contextPath}/epargne/list" 
                                    class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 ${!epargneApiDisponible ? 'opacity-50 cursor-not-allowed' : ''}">
-                                    Gérer l'Épargne
+                                    <i class="fas fa-coins mr-2"></i>Dépôts d'Épargne
                                 </a>
                             </div>
+                            <c:if test="${epargneApiDisponible}">
+                                <div class="rounded-md shadow">
+                                    <a href="${pageContext.request.contextPath}/epargne/nouveau-depot" 
+                                       class="w-full flex items-center justify-center px-5 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
+                                        <i class="fas fa-plus mr-2"></i>Nouveau Dépôt
+                                    </a>
+                                </div>
+                            </c:if>
                         </div>
                     </div>
                 </div>

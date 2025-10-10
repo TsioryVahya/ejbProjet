@@ -1,7 +1,9 @@
 package com.banque.central.controller;
 
-import com.banque.central.dto.EpargneDTO;
+import com.banque.central.dto.CompteAvecSoldeDTO;
+import com.banque.central.dto.DepotEpargneDTO;
 import com.banque.central.dto.RetraitEpargneDTO;
+import com.banque.central.dto.TauxEpargneDTO;
 import com.banque.central.service.EpargneApiService;
 import com.banque.compte.ejb.CompteServiceRemote;
 import com.banque.compte.entity.Compte;
@@ -15,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -39,7 +42,8 @@ public class EpargneServlet extends HttpServlet {
         try {
             switch (action) {
                 case "list":
-                    listerComptesEpargne(request, response);
+                case "depots":
+                    listerDepotsEpargne(request, response);
                     break;
                 case "details":
                     afficherDetailsEpargne(request, response);
@@ -54,7 +58,7 @@ public class EpargneServlet extends HttpServlet {
                     afficherStatistiques(request, response);
                     break;
                 default:
-                    listerComptesEpargne(request, response);
+                    listerDepotsEpargne(request, response);
                     break;
             }
         } catch (Exception e) {
@@ -90,30 +94,6 @@ public class EpargneServlet extends HttpServlet {
         }
     }
     
-    private void listerComptesEpargne(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        
-        try {
-            // Récupérer tous les comptes d'épargne
-            List<Compte> tousLesComptes = compteService.listerTousLesComptes();
-            
-            // Filtrer les comptes d'épargne (ceux qui contiennent "Épargne" ou "Livret" dans le type)
-            List<Compte> comptesEpargne = tousLesComptes.stream()
-                .filter(compte -> compte.getTypeCompte() != null && 
-                    (compte.getTypeCompte().getNomTypeCompte().contains("Épargne") ||
-                     compte.getTypeCompte().getNomTypeCompte().contains("Livret")))
-                .toList();
-            
-            request.setAttribute("comptesEpargne", comptesEpargne);
-            request.setAttribute("apiDisponible", epargneApiService.verifierSanteApi());
-            request.getRequestDispatcher("/jsp/epargne.jsp").forward(request, response);
-            
-        } catch (Exception e) {
-            LOGGER.severe("Erreur lors de la récupération des comptes d'épargne: " + e.getMessage());
-            throw new ServletException("Erreur lors de la récupération des comptes d'épargne", e);
-        }
-    }
-    
     private void afficherDetailsEpargne(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
@@ -135,7 +115,7 @@ public class EpargneServlet extends HttpServlet {
             }
             
             // Récupérer les dépôts d'épargne via l'API
-            List<EpargneDTO> depots = epargneApiService.obtenirDepotsParCompte(idCompte);
+            List<DepotEpargneDTO> depots = epargneApiService.obtenirDepotsParCompte(idCompte);
             BigDecimal soldeEpargne = epargneApiService.obtenirSoldeEpargne(idCompte);
             
             request.setAttribute("compte", compte);
@@ -158,15 +138,53 @@ public class EpargneServlet extends HttpServlet {
             throws ServletException, IOException {
         
         try {
-            // Récupérer les comptes d'épargne pour le formulaire
-            List<Compte> tousLesComptes = compteService.listerTousLesComptes();
-            List<Compte> comptesEpargne = tousLesComptes.stream()
-                .filter(compte -> compte.getTypeCompte() != null && 
-                    (compte.getTypeCompte().getNomTypeCompte().contains("Épargne") ||
-                     compte.getTypeCompte().getNomTypeCompte().contains("Livret")))
-                .toList();
+            // Récupérer tous les comptes pour le formulaire de dépôt
+            List<Compte> comptes = compteService.listerTousLesComptes();
+            List<CompteAvecSoldeDTO> comptesAvecSolde = new ArrayList<>();
             
-            request.setAttribute("comptesEpargne", comptesEpargne);
+            // Créer des DTOs avec les soldes calculés
+            for (Compte compte : comptes) {
+                try {
+                    BigDecimal solde = compteService.obtenirSoldeCompte(compte.getIdCompte());
+                    
+                    CompteAvecSoldeDTO compteDTO = new CompteAvecSoldeDTO(
+                        compte.getIdCompte(),
+                        compte.getNumeroCompte(),
+                        compte.getClient() != null ? compte.getClient().getNom() : "",
+                        compte.getClient() != null ? compte.getClient().getPrenom() : "",
+                        compte.getTypeCompte() != null ? compte.getTypeCompte().getNomTypeCompte() : "",
+                        solde,
+                        compte.getActif()
+                    );
+                    
+                    comptesAvecSolde.add(compteDTO);
+                } catch (Exception e) {
+                    LOGGER.warning("Erreur lors du calcul du solde pour le compte " + compte.getIdCompte() + ": " + e.getMessage());
+                    
+                    CompteAvecSoldeDTO compteDTO = new CompteAvecSoldeDTO(
+                        compte.getIdCompte(),
+                        compte.getNumeroCompte(),
+                        compte.getClient() != null ? compte.getClient().getNom() : "",
+                        compte.getClient() != null ? compte.getClient().getPrenom() : "",
+                        compte.getTypeCompte() != null ? compte.getTypeCompte().getNomTypeCompte() : "",
+                        BigDecimal.ZERO,
+                        compte.getActif()
+                    );
+                    
+                    comptesAvecSolde.add(compteDTO);
+                }
+            }
+            
+            // Récupérer les taux d'épargne disponibles
+            List<TauxEpargneDTO> tauxDisponibles = new ArrayList<>();
+            try {
+                tauxDisponibles = epargneApiService.obtenirTousLesTaux();
+            } catch (Exception e) {
+                LOGGER.warning("Erreur lors de la récupération des taux d'épargne: " + e.getMessage());
+            }
+            
+            request.setAttribute("comptes", comptesAvecSolde);
+            request.setAttribute("tauxDisponibles", tauxDisponibles);
             request.getRequestDispatcher("/jsp/nouveau-depot-epargne.jsp").forward(request, response);
             
         } catch (Exception e) {
@@ -188,7 +206,7 @@ public class EpargneServlet extends HttpServlet {
             Long idCompte = Long.parseLong(idCompteStr);
             
             // Récupérer les dépôts d'épargne disponibles pour retrait
-            List<EpargneDTO> depots = epargneApiService.obtenirDepotsParCompte(idCompte);
+            List<DepotEpargneDTO> depots = epargneApiService.obtenirDepotsParCompte(idCompte);
             Compte compte = compteService.trouverCompteParId(idCompte);
             
             request.setAttribute("compte", compte);
@@ -234,10 +252,14 @@ public class EpargneServlet extends HttpServlet {
         
         String idCompteStr = request.getParameter("idCompte");
         String montantStr = request.getParameter("montant");
+        String dureeStr = request.getParameter("duree");
+        String idTauxStr = request.getParameter("idTaux");
         
         try {
             Long idCompte = Long.parseLong(idCompteStr);
             BigDecimal montant = new BigDecimal(montantStr);
+            Integer duree = Integer.parseInt(dureeStr);
+            Long idTaux = (idTauxStr != null && !idTauxStr.isEmpty()) ? Long.parseLong(idTauxStr) : null;
             
             // Vérifier que le compte existe et est un compte d'épargne
             Compte compte = compteService.trouverCompteParId(idCompte);
@@ -247,11 +269,17 @@ public class EpargneServlet extends HttpServlet {
                 return;
             }
             
-            // Créer le dépôt d'épargne via l'API
-            EpargneDTO depot = epargneApiService.creerDepotEpargne(idCompte, montant);
+            // Créer l'opération de débit sur le compte courant
+            String descriptionOperation = "Dépôt d'épargne - " + montant + "€ sur " + duree + " mois";
+            compteService.creerOperationDepotEpargne(idCompte, montant, descriptionOperation);
             
-            request.setAttribute("succes", "Dépôt d'épargne créé avec succès");
-            response.sendRedirect(request.getContextPath() + "/epargne/details?id=" + idCompte);
+            // Créer le dépôt d'épargne via l'API
+            DepotEpargneDTO depot = epargneApiService.creerDepotEpargne(idCompte, montant, duree, idTaux);
+            
+            // Rediriger vers la liste des dépôts avec message de succès
+            request.getSession().setAttribute("succes", "Dépôt d'épargne créé avec succès pour un montant de " + 
+                montant.toString() + "€ sur " + duree + " mois. Le montant a été débité de votre compte.");
+            response.sendRedirect(request.getContextPath() + "/epargne/depots");
             
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la création du dépôt d'épargne: " + e.getMessage());
@@ -290,6 +318,31 @@ public class EpargneServlet extends HttpServlet {
             } else {
                 response.sendRedirect(request.getContextPath() + "/epargne/list");
             }
+        }
+    }
+    
+    // Méthode pour lister tous les dépôts d'épargne
+    private void listerDepotsEpargne(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        try {
+            // Récupérer le message de succès depuis la session s'il existe
+            String messageSucces = (String) request.getSession().getAttribute("succes");
+            if (messageSucces != null) {
+                request.setAttribute("succes", messageSucces);
+                request.getSession().removeAttribute("succes"); // Supprimer après utilisation
+            }
+            
+            // Récupérer tous les dépôts d'épargne directement depuis l'API
+            List<DepotEpargneDTO> tousLesDepots = epargneApiService.obtenirTousLesDepots();
+            
+            request.setAttribute("depots", tousLesDepots);
+            request.setAttribute("apiDisponible", epargneApiService.verifierSanteApi());
+            request.getRequestDispatcher("/jsp/epargne-depots.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des dépôts d'épargne: " + e.getMessage());
+            request.setAttribute("erreur", "Erreur lors de la récupération des dépôts d'épargne");
+            request.getRequestDispatcher("/jsp/erreur.jsp").forward(request, response);
         }
     }
 }

@@ -258,12 +258,38 @@ public class CompteServiceBean implements CompteServiceLocal, CompteServiceRemot
         return soldeActuel.compareTo(montant) >= 0;
     }
     
+    @Override
+    public void creerOperationDepotEpargne(Long idCompte, BigDecimal montant, String description) {
+        // Vérifier que le compte existe et est actif
+        Compte compte = em.find(Compte.class, idCompte);
+        if (compte == null || !compte.getActif()) {
+            throw new IllegalArgumentException("Compte introuvable ou inactif");
+        }
+        
+        // Vérifier le solde disponible
+        if (!soldeDisponible(idCompte, montant)) {
+            throw new IllegalArgumentException("Solde insuffisant pour effectuer ce dépôt d'épargne");
+        }
+        
+        // Trouver le type d'opération pour virement débit
+        TypeOperation typeOpVirementDebit = trouverTypeOperationParNom("VIREMENT_DEBIT");
+        if (typeOpVirementDebit == null) {
+            throw new IllegalStateException("Type d'opération VIREMENT_DEBIT introuvable");
+        }
+        
+        // Créer l'opération de débit
+        Operation operation = new Operation(montant, description, typeOpVirementDebit, compte);
+        em.persist(operation);
+    }
+
     // Méthode utilitaire privée
     private TypeOperation trouverTypeOperationParNom(String nomTypeOperation) {
-        TypedQuery<TypeOperation> query = em.createQuery(
-            "SELECT t FROM TypeOperation t WHERE t.nomTypeOperation = :nom", TypeOperation.class);
-        query.setParameter("nom", nomTypeOperation);
-        List<TypeOperation> types = query.getResultList();
-        return types.isEmpty() ? null : types.get(0);
+        try {
+            return em.createQuery("SELECT t FROM TypeOperation t WHERE t.nomTypeOperation = :nom", TypeOperation.class)
+                    .setParameter("nom", nomTypeOperation)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

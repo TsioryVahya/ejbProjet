@@ -41,4 +41,7 @@ public interface CompteServiceRemote {
     // Utilitaires
     boolean compteExiste(String numeroCompte);
     boolean soldeDisponible(Long idCompte, BigDecimal montant);
+    
+    // Opérations spéciales
+    void creerOperationDepotEpargne(Long idCompte, BigDecimal montant, String description);
 }

@@ -1,5 +1,6 @@
 using PretApi.Models;
 using PretApi.Services;
+using PretApi.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PretApi.Controllers
@@ -19,13 +20,31 @@ namespace PretApi.Controllers
 
         // ===== ENDPOINTS POUR LES PRÊTS =====
         [HttpPost("prets")]
-        public async Task<ActionResult<Pret>> CreerPret([FromBody] CreerPretRequest request)
+        public async Task<ActionResult<PretResponseDto>> CreerPret([FromBody] CreerPretRequest request)
         {
             try
             {
                 var pret = await _pretService.CreerPretAsync(request.IdCompte, request.Montant, request.DureeEnMois);
                 _logger.LogInformation($"Prêt créé: {pret.IdPret} pour le compte {request.IdCompte}");
-                return CreatedAtAction(nameof(ObtenirPret), new { id = pret.IdPret }, pret);
+                
+                // Créer un DTO simple sans références circulaires
+                var pretDto = new PretResponseDto
+                {
+                    IdPret = pret.IdPret,
+                    Duree = pret.Duree,
+                    DatePret = pret.DatePret,
+                    MontantInitial = pret.MontantInitial,
+                    MontantRestant = pret.MontantRestant,
+                    Statut = pret.Statut,
+                    IdTaux = pret.IdTaux,
+                    IdCompte = pret.IdCompte,
+                    TauxPourcentage = pret.TauxPret?.Pourcentage ?? 0,
+                    NumeroCompte = pret.Compte?.NumeroCompte ?? "",
+                    NomClient = pret.Compte?.Client?.Nom ?? "",
+                    PrenomClient = pret.Compte?.Client?.Prenom ?? ""
+                };
+                
+                return CreatedAtAction(nameof(ObtenirPret), new { id = pret.IdPret }, pretDto);
             }
             catch (ArgumentException ex)
             {
@@ -45,7 +64,7 @@ namespace PretApi.Controllers
         }
 
         [HttpGet("prets/{id}")]
-        public async Task<ActionResult<Pret>> ObtenirPret(long id)
+        public async Task<ActionResult<PretResponseDto>> ObtenirPret(long id)
         {
             try
             {
@@ -55,7 +74,24 @@ namespace PretApi.Controllers
                     return NotFound(new { message = "Prêt introuvable" });
                 }
 
-                return Ok(pret);
+                // Mapper vers un DTO pour aplatir les données
+                var pretDto = new PretResponseDto
+                {
+                    IdPret = pret.IdPret,
+                    Duree = pret.Duree,
+                    DatePret = pret.DatePret,
+                    MontantInitial = pret.MontantInitial,
+                    MontantRestant = pret.MontantRestant,
+                    Statut = pret.Statut,
+                    IdTaux = pret.IdTaux,
+                    IdCompte = pret.IdCompte,
+                    TauxPourcentage = pret.TauxPret?.Pourcentage ?? 0,
+                    NumeroCompte = pret.Compte?.NumeroCompte ?? "",
+                    NomClient = pret.Compte?.Client?.Nom ?? "",
+                    PrenomClient = pret.Compte?.Client?.Prenom ?? ""
+                };
+
+                return Ok(pretDto);
             }
             catch (Exception ex)
             {
@@ -80,12 +116,30 @@ namespace PretApi.Controllers
         }
 
         [HttpGet("prets")]
-        public async Task<ActionResult<List<Pret>>> ObtenirPretsActifs()
+        public async Task<ActionResult<List<PretResponseDto>>> ObtenirPretsActifs()
         {
             try
             {
                 var prets = await _pretService.ObtenirPretsActifsAsync();
-                return Ok(prets);
+                
+                // Mapper vers des DTOs pour éviter les références circulaires et aplatir les données
+                var pretDtos = prets.Select(pret => new PretResponseDto
+                {
+                    IdPret = pret.IdPret,
+                    Duree = pret.Duree,
+                    DatePret = pret.DatePret,
+                    MontantInitial = pret.MontantInitial,
+                    MontantRestant = pret.MontantRestant,
+                    Statut = pret.Statut,
+                    IdTaux = pret.IdTaux,
+                    IdCompte = pret.IdCompte,
+                    TauxPourcentage = pret.TauxPret?.Pourcentage ?? 0,
+                    NumeroCompte = pret.Compte?.NumeroCompte ?? "",
+                    NomClient = pret.Compte?.Client?.Nom ?? "",
+                    PrenomClient = pret.Compte?.Client?.Prenom ?? ""
+                }).ToList();
+                
+                return Ok(pretDtos);
             }
             catch (Exception ex)
             {
@@ -122,19 +176,33 @@ namespace PretApi.Controllers
         {
             try
             {
+                _logger.LogInformation($"Tentative de remboursement - IdPret: {request.IdPret}, Montant: {request.Montant}");
+                
+                if (request.IdPret <= 0)
+                {
+                    _logger.LogWarning($"ID prêt invalide: {request.IdPret}");
+                    return BadRequest(new { message = "ID prêt invalide" });
+                }
+                
+                if (request.Montant <= 0)
+                {
+                    _logger.LogWarning($"Montant invalide: {request.Montant}");
+                    return BadRequest(new { message = "Montant invalide" });
+                }
+                
                 var remboursement = await _pretService.EffectuerRemboursementAsync(request.IdPret, request.Montant);
-                _logger.LogInformation($"Remboursement effectué: {remboursement.IdRemboursement} pour le prêt {request.IdPret}");
+                _logger.LogInformation($"Remboursement effectué avec succès: {remboursement.IdRemboursement} pour le prêt {request.IdPret}");
                 return CreatedAtAction(nameof(ObtenirRemboursement), new { id = remboursement.IdRemboursement }, remboursement);
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning($"Erreur lors du remboursement: {ex.Message}");
+                _logger.LogWarning($"Erreur de validation lors du remboursement: {ex.Message}");
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur inattendue lors du remboursement");
-                return StatusCode(500, new { message = "Erreur interne du serveur" });
+                _logger.LogError(ex, $"Erreur inattendue lors du remboursement - IdPret: {request?.IdPret}, Montant: {request?.Montant}");
+                return StatusCode(500, new { message = "Erreur interne du serveur", details = ex.Message });
             }
         }
 
@@ -293,6 +361,68 @@ namespace PretApi.Controllers
         public IActionResult Health()
         {
             return Ok(new { status = "healthy", service = "pret-api", timestamp = DateTime.Now });
+        }
+
+        [HttpGet("diagnostic")]
+        public async Task<IActionResult> Diagnostic()
+        {
+            try
+            {
+                var diagnostic = new
+                {
+                    service = "pret-api",
+                    timestamp = DateTime.Now,
+                    database = new
+                    {
+                        canConnect = false,
+                        tablesExist = false,
+                        pretCount = 0,
+                        remboursementCount = 0,
+                        error = ""
+                    }
+                };
+
+                try
+                {
+                    // Test de connexion à la base
+                    var pretCount = await _pretService.ObtenirPretsActifsAsync();
+                    diagnostic = new
+                    {
+                        service = "pret-api",
+                        timestamp = DateTime.Now,
+                        database = new
+                        {
+                            canConnect = true,
+                            tablesExist = true,
+                            pretCount = pretCount.Count,
+                            remboursementCount = 0, // À implémenter si nécessaire
+                            error = ""
+                        }
+                    };
+                }
+                catch (Exception dbEx)
+                {
+                    diagnostic = new
+                    {
+                        service = "pret-api",
+                        timestamp = DateTime.Now,
+                        database = new
+                        {
+                            canConnect = false,
+                            tablesExist = false,
+                            pretCount = 0,
+                            remboursementCount = 0,
+                            error = dbEx.Message
+                        }
+                    };
+                }
+
+                return Ok(diagnostic);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
         }
     }
 
