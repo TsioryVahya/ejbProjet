@@ -9,45 +9,157 @@
     <title>Gestion des Prêts - Système Bancaire</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bank-blue': '#1e40af',
+                        'bank-light': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-blue-600 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-university text-white text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h1 class="text-white text-xl font-bold">Système Bancaire</h1>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:w-64 md:flex-col">
+            <div class="flex flex-col flex-grow pt-5 overflow-y-auto bg-gradient-to-b from-bank-blue to-blue-800 shadow-xl">
+                <!-- Logo -->
+                <div class="flex items-center flex-shrink-0 px-6 py-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                                <i class="fas fa-university text-bank-blue text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h1 class="text-white text-lg font-bold">BankSystem</h1>
+                            <p class="text-blue-200 text-xs">Gestion Bancaire</p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="${pageContext.request.contextPath}/accueil" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-home mr-2"></i>Accueil
+
+                <!-- Navigation -->
+                <nav class="mt-8 flex-1 px-3 space-y-1">
+                    <a href="${pageContext.request.contextPath}/accueil" 
+                       class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200">
+                        <i class="fas fa-home text-blue-300 mr-3 text-lg group-hover:text-blue-200"></i>
+                        <span>Tableau de Bord</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/client/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-users mr-2"></i>Clients
+                    
+                    <a href="${pageContext.request.contextPath}/client/list" 
+                       class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200">
+                        <i class="fas fa-users text-blue-300 mr-3 text-lg group-hover:text-blue-200"></i>
+                        <span>Clients</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/compte/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-credit-card mr-2"></i>Comptes
+                    
+                    <a href="${pageContext.request.contextPath}/compte/list" 
+                       class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200">
+                        <i class="fas fa-credit-card text-blue-300 mr-3 text-lg group-hover:text-blue-200"></i>
+                        <span>Comptes</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/operations/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-list-alt mr-2"></i>Opérations
+                    
+                    <a href="${pageContext.request.contextPath}/operations/list" 
+                       class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200">
+                        <i class="fas fa-exchange-alt text-blue-300 mr-3 text-lg group-hover:text-blue-200"></i>
+                        <span>Opérations</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/epargne/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-piggy-bank mr-2"></i>Épargne
+                    
+                    <a href="${pageContext.request.contextPath}/epargne/list" 
+                       class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200">
+                        <i class="fas fa-piggy-bank text-blue-300 mr-3 text-lg group-hover:text-blue-200"></i>
+                        <span>Épargne</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/pret/list" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium bg-blue-700">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>Prêts
+                    
+                    <a href="${pageContext.request.contextPath}/pret/list" 
+                       class="bg-blue-700 text-white group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-600">
+                        <i class="fas fa-hand-holding-usd text-blue-200 mr-3 text-lg"></i>
+                        <span>Prêts</span>
                     </a>
+                </nav>
+
+                <!-- Footer Sidebar -->
+                <div class="flex-shrink-0 p-4 border-t border-blue-600">
+                    <div class="text-center">
+                        <p class="text-xs text-blue-200">© 2025 BankSystem</p>
+                        <p class="text-xs text-blue-300 mt-1">v2.0.0</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </nav>
 
-    <!-- Contenu principal -->
+        <!-- Mobile menu button -->
+        <div class="md:hidden">
+            <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 bg-bank-blue text-white p-2 rounded-lg shadow-lg">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile sidebar -->
+        <div id="mobile-sidebar" class="fixed inset-0 z-40 md:hidden hidden">
+            <div class="fixed inset-0 bg-gray-600 bg-opacity-75" onclick="toggleMobileSidebar()"></div>
+            <div class="relative flex-1 flex flex-col max-w-xs w-full bg-gradient-to-b from-bank-blue to-blue-800">
+                <div class="absolute top-0 right-0 -mr-12 pt-2">
+                    <button onclick="toggleMobileSidebar()" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+                <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+                    <div class="flex-shrink-0 flex items-center px-4">
+                        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                            <i class="fas fa-university text-bank-blue"></i>
+                        </div>
+                        <h1 class="ml-2 text-white text-lg font-bold">BankSystem</h1>
+                    </div>
+                    <nav class="mt-5 px-2 space-y-1">
+                        <a href="${pageContext.request.contextPath}/accueil" class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-home mr-3"></i>Tableau de Bord
+                        </a>
+                        <a href="${pageContext.request.contextPath}/client/list" class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-users mr-3"></i>Clients
+                        </a>
+                        <a href="${pageContext.request.contextPath}/compte/list" class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-credit-card mr-3"></i>Comptes
+                        </a>
+                        <a href="${pageContext.request.contextPath}/operations/list" class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-exchange-alt mr-3"></i>Opérations
+                        </a>
+                        <a href="${pageContext.request.contextPath}/epargne/list" class="text-blue-100 hover:bg-blue-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-piggy-bank mr-3"></i>Épargne
+                        </a>
+                        <a href="${pageContext.request.contextPath}/pret/list" class="bg-blue-700 text-white group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <i class="fas fa-hand-holding-usd mr-3"></i>Prêts
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-1 overflow-auto focus:outline-none">
+            <!-- Top bar -->
+            <div class="bg-white shadow-sm border-b border-gray-200">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <div class="flex items-center">
+                            <h1 class="text-2xl font-semibold text-gray-900">Gestion des Prêts</h1>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <a href="${pageContext.request.contextPath}/pret/nouveau" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200">
+                                <i class="fas fa-plus mr-2"></i>Nouveau Prêt
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page content -->
+            <main class="flex-1 relative pb-8 overflow-y-auto">
+                <div class="px-4 sm:px-6 lg:px-8 py-8">
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <!-- En-tête -->
         <div class="px-4 py-6 sm:px-0">
@@ -244,8 +356,8 @@
                                                 <c:if test="${pret.montantInitial > 0}">
                                                     <div class="mt-1">
                                                         <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                                            <div class="bg-purple-600 h-1.5 rounded-full transition-all duration-1000" 
-                                                                 style="width: ${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}%"></div>
+                                                            <div class="bg-purple-600 h-1.5 rounded-full transition-all duration-1000 progress-bar" 
+                                                                 data-progress="${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}"></div>
                                                         </div>
                                                         <div class="text-xs text-gray-500 mt-1">
                                                             <fmt:formatNumber value="${(pret.montantInitial - pret.montantRestant) / pret.montantInitial * 100}" pattern="#0"/>% remboursé
@@ -551,16 +663,34 @@
             document.getElementById('duree-filter').addEventListener('change', filterTable);
             
             // Animation des barres de progression
-            const progressBars = document.querySelectorAll('.bg-purple-600');
+            const progressBars = document.querySelectorAll('.progress-bar');
             progressBars.forEach(bar => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.transition = 'width 1s ease-in-out';
-                    bar.style.width = width;
-                }, 100);
+                const progress = bar.getAttribute('data-progress');
+                if (progress) {
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.transition = 'width 1s ease-in-out';
+                        bar.style.width = progress + '%';
+                    }, 100);
+                }
             });
+
+            // Mobile menu button event listener
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', toggleMobileSidebar);
+            }
         });
+
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            sidebar.classList.toggle('hidden');
+        }
     </script>
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>
