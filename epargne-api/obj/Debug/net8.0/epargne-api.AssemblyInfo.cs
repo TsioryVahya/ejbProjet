@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("epargne-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7b3a19009078981ec5eb4121f980b19b19852924")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+83127f3b46fe35d064bd5fcbeb68181e280c08d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("epargne-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("epargne-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -229,15 +229,15 @@
                                             <div class="ml-4">
                                                 <div class="flex items-center">
                                                     <p class="text-sm font-medium text-gray-900">
-                                                        Dépôt d'épargne #${depot.id}
+                                                        Dépôt d'épargne #${depot.idDepotEpargne}
                                                     </p>
                                                 </div>
                                                 <p class="text-sm text-gray-500">
-                                                    Date: ${depot.dateDepot}
+                                                    Date: ${depot.dateEpargne}
                                                 </p>
-                                                <c:if test="${not empty depot.tauxInteret}">
+                                                <c:if test="${not empty depot.tauxEpargne}">
                                                     <p class="text-xs text-gray-400">
-                                                        Taux d'intérêt: ${depot.tauxInteret}%
+                                                        Taux d'intérêt: ${depot.tauxEpargne}%
                                                     </p>
                                                 </c:if>
                                             </div>
@@ -245,16 +245,16 @@
                                         <div class="flex items-center space-x-4">
                                             <div class="text-right">
                                                 <span class="text-lg font-semibold text-green-600">
-                                                    <fmt:formatNumber value="${depot.montant}" type="currency" currencySymbol="€" />
+                                                    <fmt:formatNumber value="${depot.montantEpargne}" type="currency" currencySymbol="€" />
                                                 </span>
-                                                <c:if test="${not empty depot.interetsAccumules and depot.interetsAccumules > 0}">
+                                                <c:if test="${not empty depot.interetsCalcules and depot.interetsCalcules > 0}">
                                                     <p class="text-xs text-green-500">
-                                                        +<fmt:formatNumber value="${depot.interetsAccumules}" type="currency" currencySymbol="€" /> d'intérêts
+                                                        +<fmt:formatNumber value="${depot.interetsCalcules}" type="currency" currencySymbol="€" /> d'intérêts
                                                     </p>
                                                 </c:if>
                                             </div>
                                             <div class="flex space-x-2">
-                                                <a href="${pageContext.request.contextPath}/epargne/nouveau-retrait?idDepot=${depot.id}&idCompte=${compte.idCompte}" 
+                                                <a href="${pageContext.request.contextPath}/epargne/nouveau-retrait?idDepot=${depot.idDepotEpargne}&idCompte=${compte.idCompte}" 
                                                    class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                                                    title="Effectuer un retrait">
                                                     <i class="fas fa-minus mr-1"></i>

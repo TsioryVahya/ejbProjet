@@ -151,7 +151,7 @@ namespace PretApi.Services
             var remboursement = new Remboursement
             {
                 MontantRembourser = montant,
-                DateRemboursement = DateTime.Now,
+                DateRemboursement = DateTime.UtcNow,
                 IdPret = idPret
             };
 
@@ -224,7 +224,7 @@ namespace PretApi.Services
                 MensualiteCalculee = Math.Round(mensualite, 2),
                 MontantTotal = Math.Round(montantTotal, 2),
                 InteretsTotal = Math.Round(interetsTotal, 2),
-                DateSimulation = DateTime.Now
+                DateSimulation = DateTime.UtcNow
             };
         }
 

@@ -292,7 +292,7 @@ namespace PretApi.Controllers
         [HttpGet("health")]
         public IActionResult Health()
         {
-            return Ok(new { status = "healthy", service = "pret-api", timestamp = DateTime.Now });
+            return Ok(new { status = "healthy", service = "pret-api", timestamp = DateTime.UtcNow });
         }
     }
 
