@@ -151,7 +151,7 @@ namespace PretApi.Services
             var remboursement = new Remboursement
             {
                 MontantRembourser = montant,
-                DateRemboursement = DateTime.Now,
+                DateRemboursement = DateTime.UtcNow,
                 IdPret = idPret
             };
 
